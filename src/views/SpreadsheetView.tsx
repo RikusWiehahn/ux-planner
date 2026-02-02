@@ -219,7 +219,6 @@ export const SpreadsheetView = () => {
 												{displayedDone ? "✓" : "✕"}
 											</div>
 										)}
-										<span className="text-[11px] text-zinc-500">Status</span>
 									</div>
 
 									<div className="flex items-center gap-1">

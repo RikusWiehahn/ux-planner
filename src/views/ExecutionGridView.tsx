@@ -1,7 +1,7 @@
 "use client";
 
 import { usePlan } from "@/plan/PlanContext";
-import { getPlanRollupsByNodeId } from "@/plan/selectors";
+import { getPlanDoneByNodeId, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo, useState } from "react";
 
 type RankedItem = {
@@ -12,6 +12,7 @@ type RankedItem = {
 	labelFirstLine: string;
 	labelFull: string;
 	parentLabel: string;
+	isDone: boolean;
 };
 
 type PathNode = {
@@ -58,6 +59,7 @@ export const ExecutionGridView = () => {
 	const [scope, setScope] = useState<"leavesOnly" | "includeRollups">("leavesOnly");
 
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
+	const doneByNodeId = useMemo(() => getPlanDoneByNodeId(plan.planDoc), [plan.planDoc]);
 
 	const selectedColumnIndex = useMemo(() => {
 		if (!plan.planDoc.columns.length) {
@@ -94,6 +96,7 @@ export const ExecutionGridView = () => {
 			const importance = isLeaf ? (leafMetrics ? leafMetrics.importance : 0) : rollup.importance;
 			const ease = isLeaf ? (leafMetrics ? leafMetrics.ease : 0) : rollup.ease;
 			const timeHours = isLeaf ? (leafMetrics ? leafMetrics.timeHours : 0) : rollup.timeHours;
+			const isDone = isLeaf ? !!node.leafDone : !!doneByNodeId[nodeId];
 
 			if (importance === 0 || ease === 0) {
 				continue;
@@ -114,6 +117,7 @@ export const ExecutionGridView = () => {
 				labelFirstLine,
 				labelFull,
 				parentLabel,
+				isDone,
 			});
 		}
 
@@ -140,7 +144,7 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
+	}, [doneByNodeId, plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
 
 	const columns = 5;
 
@@ -235,7 +239,7 @@ export const ExecutionGridView = () => {
 											) : null}
 
 											<div className="mt-2 border-t border-zinc-200 pt-1">
-												<div className="grid grid-cols-3 gap-1 text-xs text-zinc-700">
+												<div className="grid grid-cols-4 gap-1 text-xs text-zinc-700">
 													<div className="rounded-md bg-transparent px-1.5 py-1">
 														{item.importance} I
 													</div>
@@ -244,6 +248,11 @@ export const ExecutionGridView = () => {
 													</div>
 													<div className="rounded-md bg-transparent px-1.5 py-1">
 														{item.timeHours ? `${item.timeHours} hrs` : "—"}
+													</div>
+													<div className="rounded-md bg-transparent px-1.5 py-1">
+														<span className={item.isDone ? "text-emerald-700" : "text-red-700"}>
+															{item.isDone ? "✓" : "✕"}
+														</span>
 													</div>
 												</div>
 											</div>
