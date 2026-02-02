@@ -1,7 +1,7 @@
 "use client";
 
 import { usePlan } from "@/plan/PlanContext";
-import { getPlanDoneByNodeId, getPlanRollupsByNodeId } from "@/plan/selectors";
+import { getPlanCompletionByNodeId, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo, useState } from "react";
 
 type RankedItem = {
@@ -12,7 +12,7 @@ type RankedItem = {
 	labelFirstLine: string;
 	labelFull: string;
 	parentLabel: string;
-	isDone: boolean;
+	completionPct: number;
 };
 
 type PathNode = {
@@ -59,7 +59,7 @@ export const ExecutionGridView = () => {
 	const [scope, setScope] = useState<"leavesOnly" | "includeRollups">("leavesOnly");
 
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
-	const doneByNodeId = useMemo(() => getPlanDoneByNodeId(plan.planDoc), [plan.planDoc]);
+	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
 
 	const selectedColumnIndex = useMemo(() => {
 		if (!plan.planDoc.columns.length) {
@@ -71,6 +71,25 @@ export const ExecutionGridView = () => {
 		const idx = plan.planDoc.columns.findIndex((col) => col.id === effectiveId);
 		return idx >= 0 ? idx : 0;
 	}, [plan.planDoc.columns, selectedColumnId]);
+
+	const getCompletionBadgeClassName = (pct: number) => {
+		if (pct <= 0) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-red-50 px-2 text-xs font-bold text-red-700";
+		}
+		if (pct < 25) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-orange-50 px-2 text-xs font-bold text-orange-700";
+		}
+		if (pct < 50) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-amber-50 px-2 text-xs font-bold text-amber-700";
+		}
+		if (pct < 75) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-yellow-50 px-2 text-xs font-bold text-yellow-700";
+		}
+		if (pct < 100) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-lime-50 px-2 text-xs font-bold text-lime-700";
+		}
+		return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-emerald-50 px-2 text-xs font-bold text-emerald-700";
+	};
 
 	const ranked = useMemo(() => {
 		const items: RankedItem[] = [];
@@ -96,7 +115,8 @@ export const ExecutionGridView = () => {
 			const importance = isLeaf ? (leafMetrics ? leafMetrics.importance : 0) : rollup.importance;
 			const ease = isLeaf ? (leafMetrics ? leafMetrics.ease : 0) : rollup.ease;
 			const timeHours = isLeaf ? (leafMetrics ? leafMetrics.timeHours : 0) : rollup.timeHours;
-			const isDone = isLeaf ? !!node.leafDone : !!doneByNodeId[nodeId];
+			const completion = completionByNodeId[nodeId] ?? { doneLeaves: 0, totalLeaves: 0, pct: 0 };
+			const completionPct = completion.pct;
 
 			if (importance === 0 || ease === 0) {
 				continue;
@@ -117,7 +137,7 @@ export const ExecutionGridView = () => {
 				labelFirstLine,
 				labelFull,
 				parentLabel,
-				isDone,
+				completionPct,
 			});
 		}
 
@@ -144,7 +164,7 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [doneByNodeId, plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
+	}, [completionByNodeId, plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
 
 	const columns = 5;
 
@@ -249,10 +269,8 @@ export const ExecutionGridView = () => {
 													<div className="rounded-md bg-transparent px-1.5 py-1">
 														{item.timeHours ? `${item.timeHours} hrs` : "—"}
 													</div>
-													<div className="rounded-md bg-transparent px-1.5 py-1 font-bold">
-														<span className={item.isDone ? "text-emerald-700" : "text-red-700"}>
-															{item.isDone ? "✓" : "✕"}
-														</span>
+													<div className="rounded-md bg-transparent px-1.5 py-1">
+														<span className={getCompletionBadgeClassName(item.completionPct)}>{item.completionPct}%</span>
 													</div>
 												</div>
 											</div>

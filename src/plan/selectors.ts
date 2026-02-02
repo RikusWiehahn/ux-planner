@@ -17,6 +17,12 @@ export type PlanNodeRollup = {
 	timeHours: number;
 };
 
+export type PlanNodeCompletion = {
+	doneLeaves: number;
+	totalLeaves: number;
+	pct: number;
+};
+
 export const getPlanDoneByNodeId = (planDoc: PlanDoc): Record<string, boolean> => {
 	const cache = new Map<string, boolean>();
 
@@ -54,6 +60,58 @@ export const getPlanDoneByNodeId = (planDoc: PlanDoc): Record<string, boolean> =
 	}
 
 	const result: Record<string, boolean> = {};
+	for (const [key, value] of cache.entries()) {
+		result[key] = value;
+	}
+
+	return result;
+};
+
+export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, PlanNodeCompletion> => {
+	const cache = new Map<string, PlanNodeCompletion>();
+
+	const compute = (nodeId: string): PlanNodeCompletion => {
+		const cached = cache.get(nodeId);
+		if (cached) {
+			return cached;
+		}
+
+		const node = planDoc.nodesById[nodeId];
+		if (!node) {
+			const empty = { doneLeaves: 0, totalLeaves: 0, pct: 0 };
+			cache.set(nodeId, empty);
+			return empty;
+		}
+
+		if (node.childIds.length === 0) {
+			const doneLeaves = node.leafDone ? 1 : 0;
+			const totalLeaves = 1;
+			const pct = doneLeaves === 1 ? 100 : 0;
+			const completion = { doneLeaves, totalLeaves, pct };
+			cache.set(nodeId, completion);
+			return completion;
+		}
+
+		let doneLeaves = 0;
+		let totalLeaves = 0;
+
+		for (const childId of node.childIds) {
+			const child = compute(childId);
+			doneLeaves += child.doneLeaves;
+			totalLeaves += child.totalLeaves;
+		}
+
+		const pct = totalLeaves > 0 ? Math.round((doneLeaves / totalLeaves) * 100) : 0;
+		const completion = { doneLeaves, totalLeaves, pct };
+		cache.set(nodeId, completion);
+		return completion;
+	};
+
+	for (const nodeId of Object.keys(planDoc.nodesById)) {
+		compute(nodeId);
+	}
+
+	const result: Record<string, PlanNodeCompletion> = {};
 	for (const [key, value] of cache.entries()) {
 		result[key] = value;
 	}

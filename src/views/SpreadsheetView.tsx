@@ -9,7 +9,7 @@ import { AddRootItemUtility } from "@/plan/utilities/AddRootItemUtility";
 import { DeleteNodeUtility } from "@/plan/utilities/DeleteNodeUtility";
 import { MoveChildItemUtility } from "@/plan/utilities/MoveChildItemUtility";
 import { MoveRootItemUtility } from "@/plan/utilities/MoveRootItemUtility";
-import { getPlanDoneByNodeId, getPlanGridLayout, getPlanRollupsByNodeId } from "@/plan/selectors";
+import { getPlanCompletionByNodeId, getPlanDoneByNodeId, getPlanGridLayout, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo } from "react";
 
 export const SpreadsheetView = () => {
@@ -17,6 +17,7 @@ export const SpreadsheetView = () => {
 	const layout = useMemo(() => getPlanGridLayout(plan.planDoc), [plan.planDoc]);
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
 	const doneByNodeId = useMemo(() => getPlanDoneByNodeId(plan.planDoc), [plan.planDoc]);
+	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
 	const columnCount = plan.planDoc.columns.length;
 
 	const normalizeRating = (value: number): 0 | 1 | 2 | 3 | 4 | 5 => {
@@ -36,6 +37,25 @@ export const SpreadsheetView = () => {
 			return 4;
 		}
 		return 5;
+	};
+
+	const getCompletionBadgeClassName = (pct: number) => {
+		if (pct <= 0) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-red-50 px-2 text-xs font-bold text-red-700";
+		}
+		if (pct < 25) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-orange-50 px-2 text-xs font-bold text-orange-700";
+		}
+		if (pct < 50) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-amber-50 px-2 text-xs font-bold text-amber-700";
+		}
+		if (pct < 75) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-yellow-50 px-2 text-xs font-bold text-yellow-700";
+		}
+		if (pct < 100) {
+			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-lime-50 px-2 text-xs font-bold text-lime-700";
+		}
+		return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-emerald-50 px-2 text-xs font-bold text-emerald-700";
 	};
 
 	return (
@@ -100,6 +120,7 @@ export const SpreadsheetView = () => {
 					const displayedEase = isLeaf ? (node.leafMetrics ? node.leafMetrics.ease : 0) : rollup.ease;
 					const displayedTimeHours = isLeaf ? (node.leafMetrics ? node.leafMetrics.timeHours : 0) : rollup.timeHours;
 					const displayedDone = isLeaf ? !!node.leafDone : !!doneByNodeId[node.id];
+					const completion = completionByNodeId[node.id] ?? { doneLeaves: 0, totalLeaves: 0, pct: 0 };
 
 					const importanceValue = displayedImportance === 0 ? "" : String(displayedImportance);
 					const easeValue = displayedEase === 0 ? "" : String(displayedEase);
@@ -212,16 +233,14 @@ export const SpreadsheetView = () => {
 												}}
 												className={
 													displayedDone
-														? "rounded px-1 py-0.5 text-xs text-emerald-700 hover:bg-zinc-50 font-bold"
-														: "rounded px-1 py-0.5 text-xs text-red-700 hover:bg-zinc-50 font-bold"
+														? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+														: "inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700 hover:bg-red-100"
 												}
 											>
 												{displayedDone ? "✓" : "✕"}
 											</button>
 										) : (
-											<div className={displayedDone ? "px-1 py-0.5 text-xs text-emerald-700 font-bold" : "px-1 py-0.5 text-xs text-red-700 font-bold"}>
-												{displayedDone ? "✓" : "✕"}
-											</div>
+											<div className={getCompletionBadgeClassName(completion.pct)}>{completion.pct}%</div>
 										)}
 									</div>
 
