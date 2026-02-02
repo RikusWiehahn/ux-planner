@@ -108,7 +108,11 @@ export const SpreadsheetView = () => {
 					return (
 						<div
 							key={node.id}
-							className="group border-b border-r border-zinc-200 p-1.5"
+							className={
+								placement.rowStart === 1
+									? "group border-r border-zinc-200 p-1.5"
+									: "group border-r border-t border-zinc-200 p-1.5"
+							}
 							style={{
 								gridColumnStart: placement.columnIndex + 1,
 								gridRow: `${placement.rowStart} / span ${placement.rowSpan}`,
@@ -208,14 +212,14 @@ export const SpreadsheetView = () => {
 												}}
 												className={
 													displayedDone
-														? "rounded px-1 py-0.5 text-xs text-emerald-700 hover:bg-zinc-50"
-														: "rounded px-1 py-0.5 text-xs text-red-700 hover:bg-zinc-50"
+														? "rounded px-1 py-0.5 text-xs text-emerald-700 hover:bg-zinc-50 font-bold"
+														: "rounded px-1 py-0.5 text-xs text-red-700 hover:bg-zinc-50 font-bold"
 												}
 											>
 												{displayedDone ? "✓" : "✕"}
 											</button>
 										) : (
-											<div className={displayedDone ? "px-1 py-0.5 text-xs text-emerald-700" : "px-1 py-0.5 text-xs text-red-700"}>
+											<div className={displayedDone ? "px-1 py-0.5 text-xs text-emerald-700 font-bold" : "px-1 py-0.5 text-xs text-red-700 font-bold"}>
 												{displayedDone ? "✓" : "✕"}
 											</div>
 										)}

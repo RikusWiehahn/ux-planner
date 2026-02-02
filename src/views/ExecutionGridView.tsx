@@ -249,7 +249,7 @@ export const ExecutionGridView = () => {
 													<div className="rounded-md bg-transparent px-1.5 py-1">
 														{item.timeHours ? `${item.timeHours} hrs` : "—"}
 													</div>
-													<div className="rounded-md bg-transparent px-1.5 py-1">
+													<div className="rounded-md bg-transparent px-1.5 py-1 font-bold">
 														<span className={item.isDone ? "text-emerald-700" : "text-red-700"}>
 															{item.isDone ? "✓" : "✕"}
 														</span>
