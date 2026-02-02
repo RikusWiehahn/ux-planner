@@ -18,6 +18,8 @@ export type PlanNodeRollup = {
 export type PlanNodeCompletion = {
 	doneLeaves: number;
 	totalLeaves: number;
+	doneHours: number;
+	totalHours: number;
 	pct: number;
 };
 
@@ -76,7 +78,7 @@ export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, Plan
 
 		const node = planDoc.nodesById[nodeId];
 		if (!node) {
-			const empty = { doneLeaves: 0, totalLeaves: 0, pct: 0 };
+			const empty = { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 			cache.set(nodeId, empty);
 			return empty;
 		}
@@ -84,23 +86,34 @@ export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, Plan
 		if (node.childIds.length === 0) {
 			const doneLeaves = node.leafDone ? 1 : 0;
 			const totalLeaves = 1;
-			const pct = doneLeaves === 1 ? 100 : 0;
-			const completion = { doneLeaves, totalLeaves, pct };
+			const totalHours = node.leafMetrics ? node.leafMetrics.timeHours : 0;
+			const doneHours = node.leafDone ? totalHours : 0;
+			const pct = totalHours > 0 ? Math.round((doneHours / totalHours) * 100) : doneLeaves === 1 ? 100 : 0;
+			const completion = { doneLeaves, totalLeaves, doneHours, totalHours, pct };
 			cache.set(nodeId, completion);
 			return completion;
 		}
 
 		let doneLeaves = 0;
 		let totalLeaves = 0;
+		let doneHours = 0;
+		let totalHours = 0;
 
 		for (const childId of node.childIds) {
 			const child = compute(childId);
 			doneLeaves += child.doneLeaves;
 			totalLeaves += child.totalLeaves;
+			doneHours += child.doneHours;
+			totalHours += child.totalHours;
 		}
 
-		const pct = totalLeaves > 0 ? Math.round((doneLeaves / totalLeaves) * 100) : 0;
-		const completion = { doneLeaves, totalLeaves, pct };
+		const pct =
+			totalHours > 0
+				? Math.round((doneHours / totalHours) * 100)
+				: totalLeaves > 0 && doneLeaves === totalLeaves
+					? 100
+					: 0;
+		const completion = { doneLeaves, totalLeaves, doneHours, totalHours, pct };
 		cache.set(nodeId, completion);
 		return completion;
 	};

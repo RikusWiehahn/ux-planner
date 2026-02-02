@@ -100,7 +100,8 @@ export const ExecutionGridView = () => {
 			const importance = isLeaf ? (leafMetrics ? leafMetrics.importance : 0) : rollup.importance;
 			const ease = isLeaf ? (leafMetrics ? leafMetrics.ease : 0) : rollup.ease;
 			const timeHours = isLeaf ? (leafMetrics ? leafMetrics.timeHours : 0) : rollup.timeHours;
-			const completion = completionByNodeId[nodeId] ?? { doneLeaves: 0, totalLeaves: 0, pct: 0 };
+			const completion =
+				completionByNodeId[nodeId] ?? { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 			const completionPct = completion.pct;
 
 			if (importance === 0 || ease === 0) {

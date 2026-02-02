@@ -37,7 +37,11 @@ export const TopBarProgressSummary = () => {
 		}
 
 		const overallCompletionPct =
-			totalLeaves <= 0 ? 0 : Math.round((doneLeaves / totalLeaves) * 100);
+			totalHoursEstimated > 0
+				? Math.round((totalHoursComplete / totalHoursEstimated) * 100)
+				: totalLeaves > 0 && doneLeaves === totalLeaves
+					? 100
+					: 0;
 		const totalHoursToDo = Math.max(0, totalHoursEstimated - totalHoursComplete);
 
 		return {

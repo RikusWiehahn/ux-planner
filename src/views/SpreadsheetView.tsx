@@ -102,7 +102,8 @@ export const SpreadsheetView = () => {
 					const displayedEase = isLeaf ? (node.leafMetrics ? node.leafMetrics.ease : 0) : rollup.ease;
 					const displayedTimeHours = isLeaf ? (node.leafMetrics ? node.leafMetrics.timeHours : 0) : rollup.timeHours;
 					const displayedDone = isLeaf ? !!node.leafDone : !!doneByNodeId[node.id];
-					const completion = completionByNodeId[node.id] ?? { doneLeaves: 0, totalLeaves: 0, pct: 0 };
+					const completion =
+						completionByNodeId[node.id] ?? { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 
 					const importanceValue = displayedImportance === 0 ? "" : String(displayedImportance);
 					const easeValue = displayedEase === 0 ? "" : String(displayedEase);

@@ -101,7 +101,12 @@ export const ExecutionGridCardDetailsModal = (props: {
 		}
 	}
 
-	const completionPct = totalLeaves <= 0 ? 0 : Math.round((doneLeaves / totalLeaves) * 100);
+	const completionPct =
+		totalHoursEstimated > 0
+			? Math.round((totalHoursComplete / totalHoursEstimated) * 100)
+			: totalLeaves > 0 && doneLeaves === totalLeaves
+				? 100
+				: 0;
 	const totalHoursToDo = Math.max(0, totalHoursEstimated - totalHoursComplete);
 
 	const title = node ? clampText(getFirstLine(node.label) || "(empty)", 100) : "Details";
