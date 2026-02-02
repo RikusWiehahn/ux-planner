@@ -1,5 +1,7 @@
 "use client";
 
+import { ExecutionGridCard } from "@/components/ExecutionGridCard";
+import { ExecutionGridCardDetailsModal } from "@/components/ExecutionGridCardDetailsModal";
 import { usePlan } from "@/plan/PlanContext";
 import { getPlanCompletionByNodeId, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo, useState } from "react";
@@ -57,6 +59,7 @@ export const ExecutionGridView = () => {
 	const plan = usePlan();
 	const [selectedColumnId, setSelectedColumnId] = useState<string>("");
 	const [scope, setScope] = useState<"leavesOnly" | "includeRollups">("leavesOnly");
+	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
 	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
@@ -245,36 +248,18 @@ export const ExecutionGridView = () => {
 							<div key={idx} className="flex flex-col gap-2">
 								{bucketItems.map((item) => {
 									return (
-										<div key={item.nodeId} className="rounded-md border border-zinc-200 bg-white p-2">
-											<div className="min-w-0">
-												<div className="text-xs font-medium text-zinc-950">
-													{item.parentLabel ? `${item.parentLabel} — ${item.labelFirstLine}` : item.labelFirstLine}
-												</div>
-											</div>
-
-											{item.labelFull ? (
-												<div className="mt-1 text-[11px] text-zinc-600 whitespace-pre-wrap wrap-break-word">
-													{item.labelFull}
-												</div>
-											) : null}
-
-											<div className="mt-2 border-t border-zinc-200 pt-1">
-												<div className="grid grid-cols-4 gap-1 text-xs text-zinc-700">
-													<div className="rounded-md bg-transparent px-1.5 py-1">
-														{item.importance} I
-													</div>
-													<div className="rounded-md bg-transparent px-1.5 py-1">
-														{item.ease} E
-													</div>
-													<div className="rounded-md bg-transparent px-1.5 py-1">
-														{item.timeHours ? `${item.timeHours} hrs` : "—"}
-													</div>
-													<div className="rounded-md bg-transparent px-1.5 py-1">
-														<span className={getCompletionBadgeClassName(item.completionPct)}>{item.completionPct}%</span>
-													</div>
-												</div>
-											</div>
-										</div>
+												<ExecutionGridCard
+													key={item.nodeId}
+													parentLabel={item.parentLabel}
+													labelFirstLine={item.labelFirstLine}
+													labelFull={item.labelFull}
+													importance={item.importance}
+													ease={item.ease}
+													timeHours={item.timeHours}
+													completionPct={item.completionPct}
+													getCompletionBadgeClassName={getCompletionBadgeClassName}
+											onPress={() => setSelectedNodeId(item.nodeId)}
+												/>
 									);
 								})}
 							</div>
@@ -282,6 +267,13 @@ export const ExecutionGridView = () => {
 					})}
 				</div>
 			)}
+
+			<ExecutionGridCardDetailsModal
+				isOpen={selectedNodeId !== null}
+				onClose={() => setSelectedNodeId(null)}
+				planDoc={plan.planDoc}
+				nodeId={selectedNodeId ?? ""}
+			/>
 		</div>
 	);
 };

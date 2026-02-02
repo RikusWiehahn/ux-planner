@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { MoreMenu } from "@/components/MoreMenu";
-import { PlanProvider, usePlan } from "@/plan/PlanContext";
+import { TopBarProgressSummary } from "@/components/TopBarProgressSummary";
+import { PlanProvider } from "@/plan/PlanContext";
 import { AddColumnUtility } from "@/plan/utilities/AddColumnUtility";
 import { ExportPlanUtility } from "@/plan/utilities/ExportPlanUtility";
 import { ImportPlanUtility } from "@/plan/utilities/ImportPlanUtility";
@@ -25,68 +26,12 @@ const HomePage = () => {
 		return tab ? tab.label : "";
 	}, [activeTab]);
 
-	const TopBarLeft = () => {
-		const plan = usePlan();
-
-		const overallCompletionPct = useMemo(() => {
-			let doneLeaves = 0;
-			let totalLeaves = 0;
-
-			for (const nodeId of Object.keys(plan.planDoc.nodesById)) {
-				const node = plan.planDoc.nodesById[nodeId];
-				if (!node) {
-					continue;
-				}
-
-				if (node.childIds.length > 0) {
-					continue;
-				}
-
-				totalLeaves += 1;
-				if (node.leafDone) {
-					doneLeaves += 1;
-				}
-			}
-
-			if (totalLeaves <= 0) {
-				return 0;
-			}
-
-			return Math.round((doneLeaves / totalLeaves) * 100);
-		}, [plan.planDoc.nodesById]);
-
-		const getCompletionBadgeClassName = (pct: number) => {
-			if (pct <= 0) {
-				return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-red-50 px-2 text-xs font-bold text-red-700";
-			}
-			if (pct < 25) {
-				return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-orange-50 px-2 text-xs font-bold text-orange-700";
-			}
-			if (pct < 50) {
-				return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-amber-50 px-2 text-xs font-bold text-amber-700";
-			}
-			if (pct < 75) {
-				return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-yellow-50 px-2 text-xs font-bold text-yellow-700";
-			}
-			if (pct < 100) {
-				return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-lime-50 px-2 text-xs font-bold text-lime-700";
-			}
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-emerald-50 px-2 text-xs font-bold text-emerald-700";
-		};
-
-		return (
-			<div className="flex w-40 items-center">
-				<span className={getCompletionBadgeClassName(overallCompletionPct)}>{overallCompletionPct}%</span>
-			</div>
-		);
-	};
-
 	return (
 		<PlanProvider>
 			<div className="min-h-screen bg-zinc-50 text-zinc-950">
 				<div className="border-b border-zinc-200 bg-white">
 					<div className="flex w-full items-center justify-between gap-2 p-2">
-						<TopBarLeft />
+						<TopBarProgressSummary />
 
 						<div className="flex items-center justify-center gap-2">
 							{tabs.map((tab) => {
