@@ -106,6 +106,7 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 					label: "",
 					childIds: [],
 					leafMetrics: null,
+					leafDone: false,
 					isCollapsed: false,
 				},
 			},
@@ -176,6 +177,25 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 			nodesById: {
 				...state.nodesById,
 				[action.nodeId]: { ...node, leafMetrics: action.leafMetrics },
+			},
+		};
+	}
+
+	if (action.type === "plan/nodeSetLeafDone") {
+		const node = state.nodesById[action.nodeId];
+		if (!node) {
+			return state;
+		}
+
+		if (node.childIds.length > 0) {
+			return state;
+		}
+
+		return {
+			...state,
+			nodesById: {
+				...state.nodesById,
+				[action.nodeId]: { ...node, leafDone: action.leafDone },
 			},
 		};
 	}
@@ -279,6 +299,7 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 					label: "",
 					childIds: [],
 					leafMetrics: null,
+					leafDone: false,
 					isCollapsed: false,
 				},
 			},

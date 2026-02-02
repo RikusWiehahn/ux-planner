@@ -1,7 +1,8 @@
 "use client";
 
 import { usePlan } from "@/plan/PlanContext";
-import { useMemo } from "react";
+import { getPlanRollupsByNodeId } from "@/plan/selectors";
+import { useMemo, useState } from "react";
 
 type RankedItem = {
 	nodeId: string;
@@ -53,6 +54,21 @@ const getImmediateParentLabel = (props: { nodeId: string; nodesById: Record<stri
 
 export const ExecutionGridView = () => {
 	const plan = usePlan();
+	const [selectedColumnId, setSelectedColumnId] = useState<string>("");
+	const [scope, setScope] = useState<"leavesOnly" | "includeRollups">("leavesOnly");
+
+	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
+
+	const selectedColumnIndex = useMemo(() => {
+		if (!plan.planDoc.columns.length) {
+			return 0;
+		}
+
+		const fallbackId = plan.planDoc.columns[plan.planDoc.columns.length - 1]?.id ?? "";
+		const effectiveId = selectedColumnId || fallbackId;
+		const idx = plan.planDoc.columns.findIndex((col) => col.id === effectiveId);
+		return idx >= 0 ? idx : 0;
+	}, [plan.planDoc.columns, selectedColumnId]);
 
 	const ranked = useMemo(() => {
 		const items: RankedItem[] = [];
@@ -63,14 +79,21 @@ export const ExecutionGridView = () => {
 				continue;
 			}
 
-			if (node.childIds.length > 0) {
+			if (node.columnIndex !== selectedColumnIndex) {
 				continue;
 			}
 
+			const isLeaf = node.childIds.length === 0;
+			if (scope === "leavesOnly" && !isLeaf) {
+				continue;
+			}
+
+			const rollup = rollupsByNodeId[nodeId] ?? { importance: 0, ease: 0, timeHours: 0 };
 			const leafMetrics = node.leafMetrics;
-			const importance = leafMetrics ? leafMetrics.importance : 0;
-			const ease = leafMetrics ? leafMetrics.ease : 0;
-			const timeHours = leafMetrics ? leafMetrics.timeHours : 0;
+
+			const importance = isLeaf ? (leafMetrics ? leafMetrics.importance : 0) : rollup.importance;
+			const ease = isLeaf ? (leafMetrics ? leafMetrics.ease : 0) : rollup.ease;
+			const timeHours = isLeaf ? (leafMetrics ? leafMetrics.timeHours : 0) : rollup.timeHours;
 
 			if (importance === 0 || ease === 0) {
 				continue;
@@ -117,7 +140,7 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [plan.planDoc.nodesById]);
+	}, [plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
 
 	const columns = 5;
 
@@ -158,7 +181,32 @@ export const ExecutionGridView = () => {
 		<div>
 			<div className="mb-2 flex items-center justify-between gap-2">
 				<div className="text-xs text-zinc-600">
-					Grid: importance left→right (5→1), ease top→bottom (5→1)
+					Grid: importance left→right (high→low), ease top→bottom (high→low)
+				</div>
+
+				<div className="flex items-center gap-2">
+					<select
+						value={selectedColumnId || (plan.planDoc.columns[plan.planDoc.columns.length - 1]?.id ?? "")}
+						onChange={(e) => setSelectedColumnId(e.target.value)}
+						className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
+					>
+						{plan.planDoc.columns.map((col, idx) => {
+							return (
+								<option key={col.id} value={col.id}>
+									{idx + 1}: {col.label}
+								</option>
+							);
+						})}
+					</select>
+
+					<select
+						value={scope}
+						onChange={(e) => setScope(e.target.value === "includeRollups" ? "includeRollups" : "leavesOnly")}
+						className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
+					>
+						<option value="leavesOnly">Leaves only</option>
+						<option value="includeRollups">Include rollups</option>
+					</select>
 				</div>
 			</div>
 

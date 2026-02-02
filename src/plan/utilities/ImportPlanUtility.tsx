@@ -55,7 +55,7 @@ export const ImportPlanUtility = () => {
 				}}
 			>
 				<div className="text-xs text-zinc-600">
-					Paste a previously exported `sixb-plan.json` here. This will replace your current document.
+					Paste a previously exported `ux-planner.json` here. This will replace your current document.
 				</div>
 
 				<div className="mt-2">

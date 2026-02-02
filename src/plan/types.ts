@@ -19,6 +19,7 @@ export type PlanNode = {
 	label: string;
 	childIds: string[];
 	leafMetrics: PlanLeafMetrics | null;
+	leafDone: boolean;
 	isCollapsed: boolean;
 };
 
@@ -42,6 +43,7 @@ export type PlanAction =
 	| { type: "plan/nodeSetTitle"; nodeId: string; title: string }
 	| { type: "plan/nodeSetLabel"; nodeId: string; label: string }
 	| { type: "plan/nodeSetLeafMetrics"; nodeId: string; leafMetrics: PlanLeafMetrics | null }
+	| { type: "plan/nodeSetLeafDone"; nodeId: string; leafDone: boolean }
 	| { type: "plan/nodeToggleCollapsed"; nodeId: string }
 	| { type: "plan/nodeDeleteCascade"; nodeId: string };
 

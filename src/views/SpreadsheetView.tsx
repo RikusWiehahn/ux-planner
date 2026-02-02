@@ -9,13 +9,14 @@ import { AddRootItemUtility } from "@/plan/utilities/AddRootItemUtility";
 import { DeleteNodeUtility } from "@/plan/utilities/DeleteNodeUtility";
 import { MoveChildItemUtility } from "@/plan/utilities/MoveChildItemUtility";
 import { MoveRootItemUtility } from "@/plan/utilities/MoveRootItemUtility";
-import { getPlanGridLayout, getPlanRollupsByNodeId } from "@/plan/selectors";
+import { getPlanDoneByNodeId, getPlanGridLayout, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo } from "react";
 
 export const SpreadsheetView = () => {
 	const plan = usePlan();
 	const layout = useMemo(() => getPlanGridLayout(plan.planDoc), [plan.planDoc]);
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
+	const doneByNodeId = useMemo(() => getPlanDoneByNodeId(plan.planDoc), [plan.planDoc]);
 	const columnCount = plan.planDoc.columns.length;
 
 	const normalizeRating = (value: number): 0 | 1 | 2 | 3 | 4 | 5 => {
@@ -98,6 +99,7 @@ export const SpreadsheetView = () => {
 					const displayedImportance = isLeaf ? (node.leafMetrics ? node.leafMetrics.importance : 0) : rollup.importance;
 					const displayedEase = isLeaf ? (node.leafMetrics ? node.leafMetrics.ease : 0) : rollup.ease;
 					const displayedTimeHours = isLeaf ? (node.leafMetrics ? node.leafMetrics.timeHours : 0) : rollup.timeHours;
+					const displayedDone = isLeaf ? !!node.leafDone : !!doneByNodeId[node.id];
 
 					const importanceValue = displayedImportance === 0 ? "" : String(displayedImportance);
 					const easeValue = displayedEase === 0 ? "" : String(displayedEase);
@@ -191,8 +193,35 @@ export const SpreadsheetView = () => {
 									</div>
 								</div>
 
-								<div className="mt-auto border-t border-zinc-200 pt-1">
+								<div className="mt-auto">
 								<div className="flex items-center gap-3">
+									<div className="flex items-center gap-1">
+										{isLeaf ? (
+											<button
+												type="button"
+												onClick={() => {
+													plan.dispatch({
+														type: "plan/nodeSetLeafDone",
+														nodeId: node.id,
+														leafDone: !node.leafDone,
+													});
+												}}
+												className={
+													displayedDone
+														? "rounded px-1 py-0.5 text-xs text-emerald-700 hover:bg-zinc-50"
+														: "rounded px-1 py-0.5 text-xs text-red-700 hover:bg-zinc-50"
+												}
+											>
+												{displayedDone ? "✓" : "✕"}
+											</button>
+										) : (
+											<div className={displayedDone ? "px-1 py-0.5 text-xs text-emerald-700" : "px-1 py-0.5 text-xs text-red-700"}>
+												{displayedDone ? "✓" : "✕"}
+											</div>
+										)}
+										<span className="text-[11px] text-zinc-500">Status</span>
+									</div>
+
 									<div className="flex items-center gap-1">
 										<TextInput
 											value={importanceValue}

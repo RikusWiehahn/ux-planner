@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ux-planner
 
-## Getting Started
+A **frontend-only UX planning tool** that combines:
+- a **nested left-to-right spreadsheet** for decomposition (Problem → Requirement → Feature → Execution Level → …)
+- a **tradeoff grid** to review leaf “execution levels” ranked by **importance** and **ease**
 
-First, run the development server:
+It’s designed to be a living planning document: fast to edit, easy to share, and resilient to change.
+
+## What it does
+
+- **Infinite nesting via columns**
+  - Add as many columns (levels) as you want and rename them.
+  - Add cells and sub-cells (children) in the next column.
+- **Tree rendered as a spreadsheet**
+  - Parents **span** the vertical height of their descendants (true “header cell” behavior).
+  - Collapse/expand (currently on Column 1) to hide whole branches.
+- **Metrics with rollups**
+  - Leaf nodes are the only place you can edit:
+    - Importance (0–5)
+    - Ease (0–5)
+    - Time (hours)
+  - Parent nodes show **SUM** rollups of all descendant leaves.
+- **Execution Grid**
+  - Leaf nodes (execution levels) are shown in a 5-column grid:
+    - left → right: importance 5 → 1
+    - top → bottom (within a column): ease 5 → 1
+- **Persistence + portability**
+  - Auto-saves to localStorage.
+  - Import/export JSON (export is copyable text; import supports paste or file upload).
+
+## Tech
+
+- Next.js (App Router) + React + TypeScript
+- TailwindCSS
+- `tailwind-merge` for predictable class overrides
+- Static export compatible (GitHub Pages)
+
+## Quick start
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How to use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Create columns** (top-right `...` → Add column) and rename them.
+2. In Column 1, open the cell menu (`...`) and **Add item**.
+3. Add deeper levels by selecting a cell and choosing **Add sub-item**.
+4. Only leaf nodes (right-most cells) accept metrics; parents show rollups automatically.
+5. Switch to **Execution Grid** to review leaf execution levels by importance/ease.
 
-## Learn More
+## Import / Export
 
-To learn more about Next.js, take a look at the following resources:
+- **Export JSON**: top-right `...` → Export JSON → copy the text
+- **Import JSON**: top-right `...` → Import JSON → paste or upload a `.json` file
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Import replaces the current document.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to GitHub Pages
 
-## Deploy on Vercel
+This repo is configured for static export via `next.config.ts` (`output: "export"`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you use GitHub Actions to deploy:
+- Set `NEXT_PUBLIC_BASE_PATH` to `/<repo>` during build (for `username.github.io/<repo>/`).
+- The build output directory is `out/`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes / constraints
+
+- This is intentionally **frontend-only** (no backend).
+- Data lives in your browser (localStorage) unless you export/import JSON.
+
+## License
+
+Pick a license (MIT/Apache-2.0/etc) and add it as `LICENSE` when you’re ready to open-source.

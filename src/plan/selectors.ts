@@ -17,6 +17,50 @@ export type PlanNodeRollup = {
 	timeHours: number;
 };
 
+export const getPlanDoneByNodeId = (planDoc: PlanDoc): Record<string, boolean> => {
+	const cache = new Map<string, boolean>();
+
+	const compute = (nodeId: string): boolean => {
+		const cached = cache.get(nodeId);
+		if (typeof cached === "boolean") {
+			return cached;
+		}
+
+		const node = planDoc.nodesById[nodeId];
+		if (!node) {
+			cache.set(nodeId, false);
+			return false;
+		}
+
+		if (node.childIds.length === 0) {
+			const done = !!node.leafDone;
+			cache.set(nodeId, done);
+			return done;
+		}
+
+		for (const childId of node.childIds) {
+			if (!compute(childId)) {
+				cache.set(nodeId, false);
+				return false;
+			}
+		}
+
+		cache.set(nodeId, true);
+		return true;
+	};
+
+	for (const nodeId of Object.keys(planDoc.nodesById)) {
+		compute(nodeId);
+	}
+
+	const result: Record<string, boolean> = {};
+	for (const [key, value] of cache.entries()) {
+		result[key] = value;
+	}
+
+	return result;
+};
+
 const computeLeafCount = (planDoc: PlanDoc, nodeId: string, cache: Map<string, number>): number => {
 	const cached = cache.get(nodeId);
 	if (typeof cached === "number") {

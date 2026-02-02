@@ -76,6 +76,7 @@ const parsePlanNodeFromKey = (key: string, value: unknown): PlanNode | null => {
 	const labelRaw = value["label"];
 	const childIdsRaw = value["childIds"];
 	const leafMetricsRaw = value["leafMetrics"];
+	const leafDoneRaw = value["leafDone"];
 	const isCollapsedRaw = value["isCollapsed"];
 
 	const id = isString(idRaw) ? idRaw : key;
@@ -93,6 +94,7 @@ const parsePlanNodeFromKey = (key: string, value: unknown): PlanNode | null => {
 	const childIds = isStringArray(childIdsRaw) ? childIdsRaw : [];
 
 	const leafMetrics = leafMetricsRaw === null ? null : parsePlanLeafMetrics(leafMetricsRaw);
+	const leafDone = typeof leafDoneRaw === "boolean" ? leafDoneRaw : false;
 	const isCollapsed = typeof isCollapsedRaw === "boolean" ? isCollapsedRaw : false;
 
 	return {
@@ -103,6 +105,7 @@ const parsePlanNodeFromKey = (key: string, value: unknown): PlanNode | null => {
 		label,
 		childIds,
 		leafMetrics,
+		leafDone,
 		isCollapsed,
 	};
 };

@@ -6,7 +6,8 @@ import { planReducer } from "@/plan/reducer";
 import type { PlanAction, PlanDoc } from "@/plan/types";
 import { createEmptyPlanDoc } from "@/plan/types";
 
-const STORAGE_KEY = "sixbPlan.planDoc.v1";
+const STORAGE_KEY = "uxPlanner.planDoc.v1";
+const LEGACY_STORAGE_KEY = "sixbPlan.planDoc.v1";
 
 const loadPlanDocFromStorage = (): PlanDoc => {
 	if (typeof window === "undefined") {
@@ -14,7 +15,7 @@ const loadPlanDocFromStorage = (): PlanDoc => {
 	}
 
 	try {
-		const raw = window.localStorage.getItem(STORAGE_KEY);
+		const raw = window.localStorage.getItem(STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY);
 		if (!raw) {
 			return createEmptyPlanDoc();
 		}
