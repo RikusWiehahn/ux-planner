@@ -2,6 +2,7 @@
 
 import { MoreMenu } from "@/components/MoreMenu";
 import { TextInput } from "@/components/TextInput";
+import { getCompletionBadgeClassName } from "@/components/completionBadge";
 import { usePlan } from "@/plan/PlanContext";
 import { AddChildItemUtility } from "@/plan/utilities/AddChildItemUtility";
 import { DeleteColumnUtility } from "@/plan/utilities/DeleteColumnUtility";
@@ -37,25 +38,6 @@ export const SpreadsheetView = () => {
 			return 4;
 		}
 		return 5;
-	};
-
-	const getCompletionBadgeClassName = (pct: number) => {
-		if (pct <= 0) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-red-50 px-2 text-xs font-bold text-red-700";
-		}
-		if (pct < 25) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-orange-50 px-2 text-xs font-bold text-orange-700";
-		}
-		if (pct < 50) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-amber-50 px-2 text-xs font-bold text-amber-700";
-		}
-		if (pct < 75) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-yellow-50 px-2 text-xs font-bold text-yellow-700";
-		}
-		if (pct < 100) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-lime-50 px-2 text-xs font-bold text-lime-700";
-		}
-		return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-emerald-50 px-2 text-xs font-bold text-emerald-700";
 	};
 
 	return (
@@ -219,166 +201,166 @@ export const SpreadsheetView = () => {
 								</div>
 
 								<div className="mt-auto">
-								<div className="flex items-center gap-3">
-									<div className="flex items-center gap-1">
-										{isLeaf ? (
-											<button
-												type="button"
-												onClick={() => {
+									<div className="flex items-center gap-3">
+										<div className="flex items-center gap-1">
+											{isLeaf ? (
+												<button
+													type="button"
+													onClick={() => {
+														plan.dispatch({
+															type: "plan/nodeSetLeafDone",
+															nodeId: node.id,
+															leafDone: !node.leafDone,
+														});
+													}}
+													className={
+														displayedDone
+															? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+															: "inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700 hover:bg-red-100"
+													}
+												>
+													{displayedDone ? "✓" : "✕"}
+												</button>
+											) : (
+												<div className={getCompletionBadgeClassName(completion.pct)}>{completion.pct}%</div>
+											)}
+										</div>
+
+										<div className="flex items-center gap-1">
+											<TextInput
+												value={importanceValue}
+												onChange={(nextValue) => {
+													if (!isLeaf) {
+														return;
+													}
+
+													const raw = nextValue.trim();
+													const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
+													const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+													const clamped = Math.max(0, Math.min(5, intValue));
+													const nextImportance = normalizeRating(clamped);
+
+													const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
+													const next = {
+														importance: nextImportance,
+														ease: prev.ease,
+														timeHours: prev.timeHours,
+													};
+
+													const nextOrNull =
+														next.importance === 0 && next.ease === 0 && next.timeHours === 0
+															? null
+															: next;
+
 													plan.dispatch({
-														type: "plan/nodeSetLeafDone",
+														type: "plan/nodeSetLeafMetrics",
 														nodeId: node.id,
-														leafDone: !node.leafDone,
+														leafMetrics: nextOrNull,
 													});
 												}}
-												className={
-													displayedDone
-														? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
-														: "inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700 hover:bg-red-100"
-												}
-											>
-												{displayedDone ? "✓" : "✕"}
-											</button>
-										) : (
-											<div className={getCompletionBadgeClassName(completion.pct)}>{completion.pct}%</div>
-										)}
+												placeholder=""
+												variant="ghost"
+												isReadOnly={!isLeaf}
+												type="number"
+												min={0}
+												max={5}
+												step={1}
+												className="w-12 px-0.5 text-right tabular-nums"
+											/>
+											<span className={importanceValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
+												I
+											</span>
+										</div>
+
+										<div className="flex items-center gap-1">
+											<TextInput
+												value={easeValue}
+												onChange={(nextValue) => {
+													if (!isLeaf) {
+														return;
+													}
+
+													const raw = nextValue.trim();
+													const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
+													const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+													const clamped = Math.max(0, Math.min(5, intValue));
+													const nextEase = normalizeRating(clamped);
+
+													const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
+													const next = {
+														importance: prev.importance,
+														ease: nextEase,
+														timeHours: prev.timeHours,
+													};
+
+													const nextOrNull =
+														next.importance === 0 && next.ease === 0 && next.timeHours === 0
+															? null
+															: next;
+
+													plan.dispatch({
+														type: "plan/nodeSetLeafMetrics",
+														nodeId: node.id,
+														leafMetrics: nextOrNull,
+													});
+												}}
+												placeholder=""
+												variant="ghost"
+												isReadOnly={!isLeaf}
+												type="number"
+												min={0}
+												max={5}
+												step={1}
+												className="w-12 px-0.5 text-right tabular-nums"
+											/>
+											<span className={easeValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
+												E
+											</span>
+										</div>
+
+										<div className="flex items-center gap-1">
+											<TextInput
+												value={timeHoursValue}
+												onChange={(nextValue) => {
+													if (!isLeaf) {
+														return;
+													}
+
+													const raw = nextValue.trim();
+													const parsed = raw === "" ? 0 : Number.parseFloat(raw);
+													const nextTimeHours = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
+													const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
+													const next = {
+														importance: prev.importance,
+														ease: prev.ease,
+														timeHours: nextTimeHours,
+													};
+
+													const nextOrNull =
+														next.importance === 0 && next.ease === 0 && next.timeHours === 0
+															? null
+															: next;
+
+													plan.dispatch({
+														type: "plan/nodeSetLeafMetrics",
+														nodeId: node.id,
+														leafMetrics: nextOrNull,
+													});
+												}}
+												placeholder=""
+												variant="ghost"
+												isReadOnly={!isLeaf}
+												type="number"
+												min={0}
+												step={0.5}
+												className="w-12 px-0.5 text-right tabular-nums"
+											/>
+											<span className={timeHoursValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
+												hrs
+											</span>
+										</div>
 									</div>
-
-									<div className="flex items-center gap-1">
-										<TextInput
-											value={importanceValue}
-											onChange={(nextValue) => {
-											if (!isLeaf) {
-												return;
-											}
-
-											const raw = nextValue.trim();
-											const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
-											const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
-											const clamped = Math.max(0, Math.min(5, intValue));
-											const nextImportance = normalizeRating(clamped);
-
-											const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-											const next = {
-												importance: nextImportance,
-												ease: prev.ease,
-												timeHours: prev.timeHours,
-											};
-
-											const nextOrNull =
-												next.importance === 0 && next.ease === 0 && next.timeHours === 0
-													? null
-													: next;
-
-											plan.dispatch({
-												type: "plan/nodeSetLeafMetrics",
-												nodeId: node.id,
-												leafMetrics: nextOrNull,
-											});
-											}}
-											placeholder=""
-											variant="ghost"
-											isReadOnly={!isLeaf}
-											type="number"
-											min={0}
-											max={5}
-											step={1}
-											className="w-12 px-0.5 text-right tabular-nums"
-										/>
-										<span className={importanceValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-											I
-										</span>
-									</div>
-
-									<div className="flex items-center gap-1">
-										<TextInput
-											value={easeValue}
-											onChange={(nextValue) => {
-											if (!isLeaf) {
-												return;
-											}
-
-											const raw = nextValue.trim();
-											const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
-											const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
-											const clamped = Math.max(0, Math.min(5, intValue));
-											const nextEase = normalizeRating(clamped);
-
-											const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-											const next = {
-												importance: prev.importance,
-												ease: nextEase,
-												timeHours: prev.timeHours,
-											};
-
-											const nextOrNull =
-												next.importance === 0 && next.ease === 0 && next.timeHours === 0
-													? null
-													: next;
-
-											plan.dispatch({
-												type: "plan/nodeSetLeafMetrics",
-												nodeId: node.id,
-												leafMetrics: nextOrNull,
-											});
-											}}
-											placeholder=""
-											variant="ghost"
-											isReadOnly={!isLeaf}
-											type="number"
-											min={0}
-											max={5}
-											step={1}
-											className="w-12 px-0.5 text-right tabular-nums"
-										/>
-										<span className={easeValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-											E
-										</span>
-									</div>
-
-									<div className="flex items-center gap-1">
-										<TextInput
-											value={timeHoursValue}
-											onChange={(nextValue) => {
-											if (!isLeaf) {
-												return;
-											}
-
-											const raw = nextValue.trim();
-											const parsed = raw === "" ? 0 : Number.parseFloat(raw);
-											const nextTimeHours = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-
-											const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-											const next = {
-												importance: prev.importance,
-												ease: prev.ease,
-												timeHours: nextTimeHours,
-											};
-
-											const nextOrNull =
-												next.importance === 0 && next.ease === 0 && next.timeHours === 0
-													? null
-													: next;
-
-											plan.dispatch({
-												type: "plan/nodeSetLeafMetrics",
-												nodeId: node.id,
-												leafMetrics: nextOrNull,
-											});
-											}}
-											placeholder=""
-											variant="ghost"
-											isReadOnly={!isLeaf}
-											type="number"
-											min={0}
-											step={0.5}
-											className="w-12 px-0.5 text-right tabular-nums"
-										/>
-										<span className={timeHoursValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-											hrs
-										</span>
-									</div>
-								</div>
 								</div>
 							</div>
 						</div>

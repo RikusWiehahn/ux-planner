@@ -15,7 +15,13 @@ export const MoveChildItemUtility = (props: {
 			type="button"
 			role="menuitem"
 			disabled={props.isDisabled}
-			onClick={() => plan.dispatch({ type: "plan/nodeMoveWithinParent", nodeId: props.nodeId, direction: props.direction })}
+			onClick={() =>
+				plan.dispatch({
+					type: "plan/nodeMoveWithinParent",
+					nodeId: props.nodeId,
+					direction: props.direction,
+				})
+			}
 			className={twMerge(
 				"w-full rounded-md px-3 py-2 text-left text-sm transition-colors",
 				props.isDisabled ? "cursor-not-allowed text-zinc-400" : "text-zinc-900 hover:bg-zinc-50",

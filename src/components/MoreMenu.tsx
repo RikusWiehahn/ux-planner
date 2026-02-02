@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import type { ReactNode } from "react";
 
 export const MoreMenu = (props: {
 	ariaLabel?: string;
-	children: React.ReactNode;
+	children: ReactNode;
 	buttonClassName?: string;
 	menuClassName?: string;
 }) => {
@@ -57,7 +58,7 @@ export const MoreMenu = (props: {
 				aria-haspopup="menu"
 				aria-expanded={isOpen}
 				aria-controls={isOpen ? menuId : undefined}
-				onClick={() => setIsOpen(!isOpen)}
+				onClick={() => setIsOpen((prev) => !prev)}
 				className={twMerge(
 					"flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1 text-zinc-700",
 					"transition-colors hover:bg-zinc-100 active:bg-zinc-200",

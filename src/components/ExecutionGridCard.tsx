@@ -23,21 +23,22 @@ export const ExecutionGridCard = (props: {
 					? "cursor-pointer rounded-md border border-zinc-200 bg-white p-2 transition-colors hover:bg-zinc-50"
 					: "rounded-md border border-zinc-200 bg-white p-2"
 			}
-			onClick={props.onPress}
+			onClick={isClickable ? props.onPress : undefined}
 			role={isClickable ? "button" : undefined}
 			tabIndex={isClickable ? 0 : undefined}
-			onKeyDown={(e) => {
-				if (!isClickable) {
-					return;
-				}
-
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					if (props.onPress) {
-						props.onPress();
-					}
-				}
-			}}
+			aria-label={isClickable ? title : undefined}
+			onKeyDown={
+				isClickable
+					? (e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								if (props.onPress) {
+									props.onPress();
+								}
+							}
+						}
+					: undefined
+			}
 		>
 			<div className="min-w-0">
 				<div className="text-xs font-medium text-zinc-950">{title}</div>

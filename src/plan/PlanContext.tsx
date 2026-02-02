@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
+import type { ReactNode } from "react";
 import { parsePlanDoc } from "@/plan/parsePlanDoc";
 import { planReducer } from "@/plan/reducer";
 import type { PlanAction, PlanDoc } from "@/plan/types";
@@ -46,7 +47,7 @@ const PlanContext = createContext<{
 	isHydrated: boolean;
 } | null>(null);
 
-export const PlanProvider = (props: { children: React.ReactNode }) => {
+export const PlanProvider = (props: { children: ReactNode }) => {
 	const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
 	const [planDoc, dispatch] = useReducer(planReducer, undefined, () => {

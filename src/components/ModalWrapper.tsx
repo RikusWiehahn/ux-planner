@@ -1,9 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 export const ModalWrapper = (props: {
 	isOpen: boolean;
 	title?: string;
-	children: React.ReactNode;
+	children: ReactNode;
 	onClose: () => void;
 }) => {
 	if (!props.isOpen) {

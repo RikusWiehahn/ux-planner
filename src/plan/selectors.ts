@@ -1,5 +1,3 @@
-"use client";
-
 import type { PlanDoc } from "@/plan/types";
 
 export type PlanNodeGridPlacement = {

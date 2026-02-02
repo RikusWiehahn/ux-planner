@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { MoreMenu } from "@/components/MoreMenu";
 import { TopBarProgressSummary } from "@/components/TopBarProgressSummary";
 import { PlanProvider } from "@/plan/PlanContext";
@@ -20,11 +20,6 @@ const tabs: Array<{ key: TabKey; label: string }> = [
 
 const HomePage = () => {
 	const [activeTab, setActiveTab] = useState<TabKey>("spreadsheet");
-
-	const activeTabLabel = useMemo(() => {
-		const tab = tabs.find((t) => t.key === activeTab);
-		return tab ? tab.label : "";
-	}, [activeTab]);
 
 	return (
 		<PlanProvider>

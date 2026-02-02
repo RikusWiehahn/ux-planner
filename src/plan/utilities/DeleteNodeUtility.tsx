@@ -4,16 +4,14 @@ import { ModalWrapper } from "@/components/ModalWrapper";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { SecondaryButton } from "@/components/SecondaryButton";
 import { usePlan } from "@/plan/PlanContext";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export const DeleteNodeUtility = (props: { nodeId: string }) => {
 	const plan = usePlan();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 
-	const label = useMemo(() => {
-		const node = plan.planDoc.nodesById[props.nodeId];
-		return node ? node.label : "";
-	}, [plan.planDoc.nodesById, props.nodeId]);
+	const node = plan.planDoc.nodesById[props.nodeId];
+	const label = node ? node.label : "";
 
 	return (
 		<div>

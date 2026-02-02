@@ -14,6 +14,16 @@ export const ImportPlanUtility = () => {
 	const [jsonText, setJsonText] = useState<string>("");
 	const [error, setError] = useState<string>("");
 
+	const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+		if (!file) {
+			return;
+		}
+
+		const text = await file.text();
+		setJsonText(text);
+	};
+
 	const importFromText = (text: string) => {
 		try {
 			const parsed: unknown = JSON.parse(text);
@@ -76,15 +86,7 @@ export const ImportPlanUtility = () => {
 					<input
 						type="file"
 						accept="application/json,.json"
-						onChange={async (e) => {
-							const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-							if (!file) {
-								return;
-							}
-
-							const text = await file.text();
-							setJsonText(text);
-						}}
+						onChange={onFileChange}
 						className="text-xs text-zinc-700"
 					/>
 

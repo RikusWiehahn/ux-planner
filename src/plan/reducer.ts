@@ -1,5 +1,3 @@
-"use client";
-
 import type { PlanAction, PlanDoc } from "@/plan/types";
 import { createEmptyPlanDoc } from "@/plan/types";
 

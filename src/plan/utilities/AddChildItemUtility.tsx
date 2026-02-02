@@ -1,20 +1,13 @@
 "use client";
 
 import { usePlan } from "@/plan/PlanContext";
-import { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const AddChildItemUtility = (props: { parentId: string }) => {
 	const plan = usePlan();
 
-	const isDisabled = useMemo(() => {
-		const parent = plan.planDoc.nodesById[props.parentId];
-		if (!parent) {
-			return true;
-		}
-
-		return parent.columnIndex + 1 >= plan.planDoc.columns.length;
-	}, [plan.planDoc.columns.length, plan.planDoc.nodesById, props.parentId]);
+	const parent = plan.planDoc.nodesById[props.parentId];
+	const isDisabled = !parent || parent.columnIndex + 1 >= plan.planDoc.columns.length;
 
 	return (
 		<button

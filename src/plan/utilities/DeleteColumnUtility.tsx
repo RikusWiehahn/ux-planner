@@ -4,16 +4,14 @@ import { ModalWrapper } from "@/components/ModalWrapper";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { SecondaryButton } from "@/components/SecondaryButton";
 import { usePlan } from "@/plan/PlanContext";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export const DeleteColumnUtility = (props: { columnIndex: number }) => {
 	const plan = usePlan();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 
-	const label = useMemo(() => {
-		const col = plan.planDoc.columns[props.columnIndex];
-		return col ? col.label : "";
-	}, [plan.planDoc.columns, props.columnIndex]);
+	const col = plan.planDoc.columns[props.columnIndex];
+	const label = col ? col.label : "";
 
 	return (
 		<div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { twMerge } from "tailwind-merge";
+import type { ReactNode } from "react";
 
 export const SecondaryButton = (props: {
-	children: React.ReactNode;
+	children: ReactNode;
 	onPress: () => void;
 	isDisabled?: boolean;
 	className?: string;

@@ -1,5 +1,3 @@
-"use client";
-
 export type PlanColumn = {
 	id: string;
 	label: string;

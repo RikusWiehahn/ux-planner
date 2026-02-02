@@ -2,7 +2,7 @@
 
 import { ModalWrapper } from "@/components/ModalWrapper";
 import { SecondaryButton } from "@/components/SecondaryButton";
-import { PlanDoc } from "@/plan/types";
+import type { PlanDoc } from "@/plan/types";
 
 const getFirstLine = (value: string) => {
 	const trimmed = value.trim();
@@ -39,7 +39,7 @@ const getDoneCircleClassName = (isDone: boolean) => {
 		: "flex h-5 w-5 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700";
 };
 
-const collectDescendantLeafIds = (props: { planDoc: PlanDoc; nodeId: string }) => {
+const getDescendantLeafIds = (props: { planDoc: PlanDoc; nodeId: string }) => {
 	const visited = new Set<string>();
 	const leafIds: string[] = [];
 
@@ -74,8 +74,12 @@ export const ExecutionGridCardDetailsModal = (props: {
 	planDoc: PlanDoc;
 	nodeId: string;
 }) => {
+	if (!props.isOpen) {
+		return null;
+	}
+
 	const node = props.planDoc.nodesById[props.nodeId];
-	const leafIds = node ? collectDescendantLeafIds({ planDoc: props.planDoc, nodeId: props.nodeId }) : [];
+	const leafIds = node ? getDescendantLeafIds({ planDoc: props.planDoc, nodeId: props.nodeId }) : [];
 
 	let totalLeaves = 0;
 	let doneLeaves = 0;

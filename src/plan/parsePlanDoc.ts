@@ -1,5 +1,3 @@
-"use client";
-
 import type { PlanColumn, PlanDoc, PlanLeafMetrics, PlanNode } from "@/plan/types";
 import { createEmptyPlanDoc } from "@/plan/types";
 
@@ -181,7 +179,7 @@ export const parsePlanDoc = (value: unknown): PlanDoc | null => {
 		}
 	}
 
-	let rootIds: string[] = [];
+	const rootIds: string[] = [];
 	if (isStringArray(rootIdsRaw)) {
 		for (const id of rootIdsRaw) {
 			const node = nodesById[id];

@@ -2,6 +2,7 @@
 
 import { ExecutionGridCard } from "@/components/ExecutionGridCard";
 import { ExecutionGridCardDetailsModal } from "@/components/ExecutionGridCardDetailsModal";
+import { getCompletionBadgeClassName } from "@/components/completionBadge";
 import { usePlan } from "@/plan/PlanContext";
 import { getPlanCompletionByNodeId, getPlanRollupsByNodeId } from "@/plan/selectors";
 import { useMemo, useState } from "react";
@@ -74,25 +75,6 @@ export const ExecutionGridView = () => {
 		const idx = plan.planDoc.columns.findIndex((col) => col.id === effectiveId);
 		return idx >= 0 ? idx : 0;
 	}, [plan.planDoc.columns, selectedColumnId]);
-
-	const getCompletionBadgeClassName = (pct: number) => {
-		if (pct <= 0) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-red-50 px-2 text-xs font-bold text-red-700";
-		}
-		if (pct < 25) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-orange-50 px-2 text-xs font-bold text-orange-700";
-		}
-		if (pct < 50) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-amber-50 px-2 text-xs font-bold text-amber-700";
-		}
-		if (pct < 75) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-yellow-50 px-2 text-xs font-bold text-yellow-700";
-		}
-		if (pct < 100) {
-			return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-lime-50 px-2 text-xs font-bold text-lime-700";
-		}
-		return "inline-flex h-6 min-w-10 items-center justify-center rounded-full bg-emerald-50 px-2 text-xs font-bold text-emerald-700";
-	};
 
 	const ranked = useMemo(() => {
 		const items: RankedItem[] = [];
@@ -167,7 +149,7 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [completionByNodeId, plan.planDoc.columns, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
+	}, [completionByNodeId, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
 
 	const columns = 5;
 
@@ -248,18 +230,18 @@ export const ExecutionGridView = () => {
 							<div key={idx} className="flex flex-col gap-2">
 								{bucketItems.map((item) => {
 									return (
-												<ExecutionGridCard
-													key={item.nodeId}
-													parentLabel={item.parentLabel}
-													labelFirstLine={item.labelFirstLine}
-													labelFull={item.labelFull}
-													importance={item.importance}
-													ease={item.ease}
-													timeHours={item.timeHours}
-													completionPct={item.completionPct}
-													getCompletionBadgeClassName={getCompletionBadgeClassName}
+										<ExecutionGridCard
+											key={item.nodeId}
+											parentLabel={item.parentLabel}
+											labelFirstLine={item.labelFirstLine}
+											labelFull={item.labelFull}
+											importance={item.importance}
+											ease={item.ease}
+											timeHours={item.timeHours}
+											completionPct={item.completionPct}
+											getCompletionBadgeClassName={getCompletionBadgeClassName}
 											onPress={() => setSelectedNodeId(item.nodeId)}
-												/>
+										/>
 									);
 								})}
 							</div>
