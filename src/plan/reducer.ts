@@ -166,10 +166,6 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 			return state;
 		}
 
-		if (node.childIds.length > 0) {
-			return state;
-		}
-
 		return {
 			...state,
 			nodesById: {
@@ -182,10 +178,6 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 	if (action.type === "plan/nodeSetLeafDone") {
 		const node = state.nodesById[action.nodeId];
 		if (!node) {
-			return state;
-		}
-
-		if (node.childIds.length > 0) {
 			return state;
 		}
 

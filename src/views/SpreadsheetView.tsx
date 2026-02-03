@@ -43,10 +43,10 @@ export const SpreadsheetView = () => {
 	return (
 		<div>
 			<div className="max-w-full overflow-x-auto">
-				<div className="min-w-max px-4">
+				<div className="w-full min-w-0 px-4">
 					<div
 						className="grid gap-2"
-						style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(220px, 1fr))` }}
+						style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(100px, 1fr))` }}
 					>
 						{plan.planDoc.columns.map((col, idx) => {
 							return (
@@ -77,8 +77,8 @@ export const SpreadsheetView = () => {
 					<div
 						className="mt-2 grid gap-0 rounded-md border border-zinc-200 bg-white"
 						style={{
-							gridTemplateColumns: `repeat(${columnCount}, minmax(220px, 1fr))`,
-							gridAutoRows: "minmax(120px, auto)",
+							gridTemplateColumns: `repeat(${columnCount}, minmax(100px, 1fr))`,
+							gridAutoRows: "minmax(100px, auto)",
 						}}
 					>
 						{plan.planDoc.rootIds.length === 0 ? (
@@ -100,16 +100,33 @@ export const SpreadsheetView = () => {
 							const isLeaf = node.childIds.length === 0;
 							const showCollapse = node.columnIndex === 0 && node.childIds.length > 0;
 							const rollup = rollupsByNodeId[node.id] ?? { importance: 0, ease: 0, timeHours: 0 };
-							const displayedImportance = isLeaf ? (node.leafMetrics ? node.leafMetrics.importance : 0) : rollup.importance;
-							const displayedEase = isLeaf ? (node.leafMetrics ? node.leafMetrics.ease : 0) : rollup.ease;
-							const displayedTimeHours = isLeaf ? (node.leafMetrics ? node.leafMetrics.timeHours : 0) : rollup.timeHours;
-							const displayedDone = isLeaf ? !!node.leafDone : !!doneByNodeId[node.id];
+							const displayedImportance = node.leafMetrics ? node.leafMetrics.importance : rollup.importance;
+							const displayedEase = node.leafMetrics ? node.leafMetrics.ease : rollup.ease;
+							const displayedTimeHours = node.leafMetrics ? node.leafMetrics.timeHours : rollup.timeHours;
+							const displayedDone = !!doneByNodeId[node.id];
 							const completion =
 								completionByNodeId[node.id] ?? { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 
 							const importanceValue = displayedImportance === 0 ? "" : String(displayedImportance);
 							const easeValue = displayedEase === 0 ? "" : String(displayedEase);
 							const timeHoursValue = displayedTimeHours === 0 ? "" : String(displayedTimeHours);
+
+							const getMetricsBaseline = () => {
+								if (node.leafMetrics) {
+									return node.leafMetrics;
+								}
+
+								const clampRating = (value: number) => {
+									const intValue = Number.isFinite(value) ? Math.trunc(value) : 0;
+									return normalizeRating(Math.max(0, Math.min(5, intValue)));
+								};
+
+								return {
+									importance: clampRating(Math.round(rollup.importance)),
+									ease: clampRating(Math.round(rollup.ease)),
+									timeHours: rollup.timeHours,
+								};
+							};
 
 							return (
 								<div
@@ -204,164 +221,170 @@ export const SpreadsheetView = () => {
 										</div>
 
 										<div className="mt-auto">
-											<div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+											<div className="flex flex-wrap items-center gap-1 text-[11px] leading-none">
 												<div className="flex items-center gap-1">
-													{isLeaf ? (
+													<div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
 														<button
 															type="button"
 															onClick={() => {
 																plan.dispatch({
 																	type: "plan/nodeSetLeafDone",
 																	nodeId: node.id,
-																	leafDone: !node.leafDone,
+																	leafDone: !displayedDone,
 																});
 															}}
 															className={
 																displayedDone
-																	? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
-																	: "inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700 hover:bg-red-100"
+																	? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100"
+																	: "inline-flex h-5 w-5 items-center justify-center rounded-full bg-zinc-50 text-[10px] font-bold text-zinc-700 hover:bg-zinc-100"
 															}
 														>
 															{displayedDone ? "✓" : "✕"}
 														</button>
-													) : (
-														<div className={getCompletionBadgeClassName(completion.pct)}>{completion.pct}%</div>
-													)}
+														{node.childIds.length > 0 ? (
+															<div
+																className={`${getCompletionBadgeClassName(completion.pct)} px-1.5 py-0 h-auto min-w-0 text-[10px] font-semibold`}
+															>
+																{completion.pct}%
+															</div>
+														) : null}
+													</div>
 												</div>
 
 												<div className="flex items-center gap-1">
-													<TextInput
-														value={importanceValue}
-														onChange={(nextValue) => {
-															if (!isLeaf) {
-																return;
+													<div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0 text-[10px] font-semibold">
+														<span
+															className={
+																`${importanceValue ? "text-zinc-600" : "text-zinc-400"} font-mono`
 															}
+														>
+															I
+														</span>
+														<TextInput
+															value={importanceValue}
+															onChange={(nextValue) => {
+																const raw = nextValue.trim();
+																const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
+																const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+																const clamped = Math.max(0, Math.min(5, intValue));
+																const nextImportance = normalizeRating(clamped);
 
-															const raw = nextValue.trim();
-															const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
-															const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
-															const clamped = Math.max(0, Math.min(5, intValue));
-															const nextImportance = normalizeRating(clamped);
+																const prev = getMetricsBaseline();
+																const next = {
+																	importance: nextImportance,
+																	ease: prev.ease,
+																	timeHours: prev.timeHours,
+																};
 
-															const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-															const next = {
-																importance: nextImportance,
-																ease: prev.ease,
-																timeHours: prev.timeHours,
-															};
+																const nextOrNull =
+																	next.importance === 0 && next.ease === 0 && next.timeHours === 0
+																		? null
+																		: next;
 
-															const nextOrNull =
-																next.importance === 0 && next.ease === 0 && next.timeHours === 0
-																	? null
-																	: next;
-
-															plan.dispatch({
-																type: "plan/nodeSetLeafMetrics",
-																nodeId: node.id,
-																leafMetrics: nextOrNull,
-															});
-														}}
-														placeholder=""
-														variant="ghost"
-														isReadOnly={!isLeaf}
-														type="number"
-														min={0}
-														max={5}
-														step={1}
-														className="w-12 px-0.5 text-right tabular-nums"
-													/>
-													<span className={importanceValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-														I
-													</span>
+																plan.dispatch({
+																	type: "plan/nodeSetLeafMetrics",
+																	nodeId: node.id,
+																	leafMetrics: nextOrNull,
+																});
+															}}
+															placeholder=""
+															variant="ghost"
+															type="number"
+															min={0}
+															max={5}
+															step={1}
+															className="w-9 px-0 text-left text-[10px] font-semibold tabular-nums"
+														/>
+													</div>
 												</div>
 
 												<div className="flex items-center gap-1">
-													<TextInput
-														value={easeValue}
-														onChange={(nextValue) => {
-															if (!isLeaf) {
-																return;
-															}
+													<div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0 text-[10px] font-semibold">
+														<span
+															className={`${easeValue ? "text-zinc-600" : "text-zinc-400"} font-mono`}
+														>
+															E
+														</span>
+														<TextInput
+															value={easeValue}
+															onChange={(nextValue) => {
+																const raw = nextValue.trim();
+																const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
+																const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+																const clamped = Math.max(0, Math.min(5, intValue));
+																const nextEase = normalizeRating(clamped);
 
-															const raw = nextValue.trim();
-															const parsed = raw === "" ? 0 : Number.parseInt(raw, 10);
-															const intValue = Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
-															const clamped = Math.max(0, Math.min(5, intValue));
-															const nextEase = normalizeRating(clamped);
+																const prev = getMetricsBaseline();
+																const next = {
+																	importance: prev.importance,
+																	ease: nextEase,
+																	timeHours: prev.timeHours,
+																};
 
-															const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-															const next = {
-																importance: prev.importance,
-																ease: nextEase,
-																timeHours: prev.timeHours,
-															};
+																const nextOrNull =
+																	next.importance === 0 && next.ease === 0 && next.timeHours === 0
+																		? null
+																		: next;
 
-															const nextOrNull =
-																next.importance === 0 && next.ease === 0 && next.timeHours === 0
-																	? null
-																	: next;
-
-															plan.dispatch({
-																type: "plan/nodeSetLeafMetrics",
-																nodeId: node.id,
-																leafMetrics: nextOrNull,
-															});
-														}}
-														placeholder=""
-														variant="ghost"
-														isReadOnly={!isLeaf}
-														type="number"
-														min={0}
-														max={5}
-														step={1}
-														className="w-12 px-0.5 text-right tabular-nums"
-													/>
-													<span className={easeValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-														E
-													</span>
+																plan.dispatch({
+																	type: "plan/nodeSetLeafMetrics",
+																	nodeId: node.id,
+																	leafMetrics: nextOrNull,
+																});
+															}}
+															placeholder=""
+															variant="ghost"
+															type="number"
+															min={0}
+															max={5}
+															step={1}
+															className="w-9 px-0 text-left text-[10px] font-semibold tabular-nums"
+														/>
+													</div>
 												</div>
 
 												<div className="flex items-center gap-1">
-													<TextInput
-														value={timeHoursValue}
-														onChange={(nextValue) => {
-															if (!isLeaf) {
-																return;
+													<div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0 text-[10px] font-semibold">
+														<TextInput
+															value={timeHoursValue}
+															onChange={(nextValue) => {
+																const raw = nextValue.trim();
+																const parsed = raw === "" ? 0 : Number.parseFloat(raw);
+																const nextTimeHours = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
+																const prev = getMetricsBaseline();
+																const next = {
+																	importance: prev.importance,
+																	ease: prev.ease,
+																	timeHours: nextTimeHours,
+																};
+
+																const nextOrNull =
+																	next.importance === 0 && next.ease === 0 && next.timeHours === 0
+																		? null
+																		: next;
+
+																plan.dispatch({
+																	type: "plan/nodeSetLeafMetrics",
+																	nodeId: node.id,
+																	leafMetrics: nextOrNull,
+																});
+															}}
+															placeholder=""
+															variant="ghost"
+															type="number"
+															min={0}
+															step={0.5}
+															className="w-9 px-0 text-right text-[10px] font-semibold tabular-nums"
+														/>
+														<span
+															className={
+																`${timeHoursValue ? "text-zinc-600" : "text-zinc-400"} font-mono`
 															}
-
-															const raw = nextValue.trim();
-															const parsed = raw === "" ? 0 : Number.parseFloat(raw);
-															const nextTimeHours = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-
-															const prev = node.leafMetrics ?? { importance: 0, ease: 0, timeHours: 0 };
-															const next = {
-																importance: prev.importance,
-																ease: prev.ease,
-																timeHours: nextTimeHours,
-															};
-
-															const nextOrNull =
-																next.importance === 0 && next.ease === 0 && next.timeHours === 0
-																	? null
-																	: next;
-
-															plan.dispatch({
-																type: "plan/nodeSetLeafMetrics",
-																nodeId: node.id,
-																leafMetrics: nextOrNull,
-															});
-														}}
-														placeholder=""
-														variant="ghost"
-														isReadOnly={!isLeaf}
-														type="number"
-														min={0}
-														step={0.5}
-														className="w-12 px-0.5 text-right tabular-nums"
-													/>
-													<span className={timeHoursValue ? "text-[11px] text-zinc-500" : "text-[11px] text-zinc-400"}>
-														hrs
-													</span>
+														>
+															hrs
+														</span>
+													</div>
 												</div>
 											</div>
 										</div>

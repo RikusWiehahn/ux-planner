@@ -24,46 +24,11 @@ export type PlanNodeCompletion = {
 };
 
 export const getPlanDoneByNodeId = (planDoc: PlanDoc): Record<string, boolean> => {
-	const cache = new Map<string, boolean>();
-
-	const compute = (nodeId: string): boolean => {
-		const cached = cache.get(nodeId);
-		if (typeof cached === "boolean") {
-			return cached;
-		}
-
-		const node = planDoc.nodesById[nodeId];
-		if (!node) {
-			cache.set(nodeId, false);
-			return false;
-		}
-
-		if (node.childIds.length === 0) {
-			const done = !!node.leafDone;
-			cache.set(nodeId, done);
-			return done;
-		}
-
-		for (const childId of node.childIds) {
-			if (!compute(childId)) {
-				cache.set(nodeId, false);
-				return false;
-			}
-		}
-
-		cache.set(nodeId, true);
-		return true;
-	};
-
-	for (const nodeId of Object.keys(planDoc.nodesById)) {
-		compute(nodeId);
-	}
-
 	const result: Record<string, boolean> = {};
-	for (const [key, value] of cache.entries()) {
-		result[key] = value;
+	for (const nodeId of Object.keys(planDoc.nodesById)) {
+		const node = planDoc.nodesById[nodeId];
+		result[nodeId] = !!node.leafDone;
 	}
-
 	return result;
 };
 
@@ -83,21 +48,10 @@ export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, Plan
 			return empty;
 		}
 
-		if (node.childIds.length === 0) {
-			const doneLeaves = node.leafDone ? 1 : 0;
-			const totalLeaves = 1;
-			const totalHours = node.leafMetrics ? node.leafMetrics.timeHours : 0;
-			const doneHours = node.leafDone ? totalHours : 0;
-			const pct = totalHours > 0 ? Math.round((doneHours / totalHours) * 100) : doneLeaves === 1 ? 100 : 0;
-			const completion = { doneLeaves, totalLeaves, doneHours, totalHours, pct };
-			cache.set(nodeId, completion);
-			return completion;
-		}
-
-		let doneLeaves = 0;
-		let totalLeaves = 0;
-		let doneHours = 0;
-		let totalHours = 0;
+		let doneLeaves = node.leafMetrics && node.leafDone ? 1 : 0;
+		let totalLeaves = node.leafMetrics ? 1 : 0;
+		let doneHours = node.leafMetrics && node.leafDone ? node.leafMetrics.timeHours : 0;
+		let totalHours = node.leafMetrics ? node.leafMetrics.timeHours : 0;
 
 		for (const childId of node.childIds) {
 			const child = compute(childId);
@@ -107,12 +61,7 @@ export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, Plan
 			totalHours += child.totalHours;
 		}
 
-		const pct =
-			totalHours > 0
-				? Math.round((doneHours / totalHours) * 100)
-				: totalLeaves > 0 && doneLeaves === totalLeaves
-					? 100
-					: 0;
+		const pct = totalHours > 0 ? Math.round((doneHours / totalHours) * 100) : 0;
 		const completion = { doneLeaves, totalLeaves, doneHours, totalHours, pct };
 		cache.set(nodeId, completion);
 		return completion;
@@ -237,22 +186,10 @@ export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNod
 			return empty;
 		}
 
-		if (node.childIds.length === 0) {
-			const metrics = node.leafMetrics;
-			const rollup = {
-				importanceSum: metrics ? metrics.importance : 0,
-				easeSum: metrics ? metrics.ease : 0,
-				timeHours: metrics ? metrics.timeHours : 0,
-				leafCount: 1,
-			};
-			cache.set(nodeId, rollup);
-			return rollup;
-		}
-
-		let importanceSum = 0;
-		let easeSum = 0;
-		let timeHours = 0;
-		let leafCount = 0;
+		let importanceSum = node.leafMetrics ? node.leafMetrics.importance : 0;
+		let easeSum = node.leafMetrics ? node.leafMetrics.ease : 0;
+		let timeHours = node.leafMetrics ? node.leafMetrics.timeHours : 0;
+		let leafCount = node.leafMetrics ? 1 : 0;
 
 		for (const childId of node.childIds) {
 			const childRollup = compute(childId);

@@ -49,13 +49,24 @@ export const ExecutionGridCard = (props: {
 			) : null}
 
 			<div className="mt-2 border-t border-zinc-200 pt-1">
-				<div className="grid grid-cols-4 gap-1 text-xs text-zinc-700">
-					<div className="rounded-md bg-transparent px-1.5 py-1">{props.importance} I</div>
-					<div className="rounded-md bg-transparent px-1.5 py-1">{props.ease} E</div>
-					<div className="rounded-md bg-transparent px-1.5 py-1">{timeText}</div>
-					<div className="rounded-md bg-transparent px-1.5 py-1">
-						<span className={props.getCompletionBadgeClassName(props.completionPct)}>{props.completionPct}%</span>
+				<div className="flex flex-wrap items-center gap-1 text-[10px] font-semibold text-zinc-700">
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="font-mono text-zinc-500">I</span>
+						<span className="tabular-nums">{props.importance}</span>
 					</div>
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="font-mono text-zinc-500">E</span>
+						<span className="tabular-nums">{props.ease}</span>
+					</div>
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="tabular-nums">{props.timeHours ? props.timeHours : "—"}</span>
+						<span className="font-mono text-zinc-500">hrs</span>
+					</div>
+					<span
+						className={`${props.getCompletionBadgeClassName(props.completionPct)} border border-zinc-200 px-1.5 py-0 h-auto min-w-0 text-[10px] font-semibold`}
+					>
+						{props.completionPct}%
+					</span>
 				</div>
 			</div>
 		</div>
