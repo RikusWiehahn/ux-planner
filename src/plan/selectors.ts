@@ -9,6 +9,10 @@ export type PlanNodeGridPlacement = {
 	siblingsCount: number;
 };
 
+export type PlanGridLayoutOptions = {
+	childLimitByColumnIndex?: Partial<Record<number, number>>;
+};
+
 export type PlanNodeRollup = {
 	importance: number;
 	ease: number;
@@ -130,7 +134,27 @@ export const getPlanCompletionByNodeId = (planDoc: PlanDoc): Record<string, Plan
 	return result;
 };
 
-const computeLeafCount = (planDoc: PlanDoc, nodeId: string, cache: Map<string, number>): number => {
+const getVisibleChildIds = (node: { columnIndex: number; childIds: string[] }, options: PlanGridLayoutOptions) => {
+	const childLimitByColumnIndex = options.childLimitByColumnIndex;
+	if (!childLimitByColumnIndex) {
+		return node.childIds;
+	}
+
+	const rawLimit = childLimitByColumnIndex[node.columnIndex];
+	if (typeof rawLimit !== "number" || !Number.isFinite(rawLimit)) {
+		return node.childIds;
+	}
+
+	const limit = Math.max(0, Math.trunc(rawLimit));
+	return node.childIds.slice(0, limit);
+};
+
+const computeLeafCount = (
+	planDoc: PlanDoc,
+	nodeId: string,
+	cache: Map<string, number>,
+	options: PlanGridLayoutOptions,
+): number => {
 	const cached = cache.get(nodeId);
 	if (typeof cached === "number") {
 		return cached;
@@ -152,9 +176,10 @@ const computeLeafCount = (planDoc: PlanDoc, nodeId: string, cache: Map<string, n
 		return 1;
 	}
 
+	const visibleChildIds = getVisibleChildIds(node, options);
 	let sum = 0;
-	for (const childId of node.childIds) {
-		sum += computeLeafCount(planDoc, childId, cache);
+	for (const childId of visibleChildIds) {
+		sum += computeLeafCount(planDoc, childId, cache, options);
 	}
 
 	const finalSum = sum > 0 ? sum : 1;
@@ -162,7 +187,10 @@ const computeLeafCount = (planDoc: PlanDoc, nodeId: string, cache: Map<string, n
 	return finalSum;
 };
 
-export const getPlanGridLayout = (planDoc: PlanDoc): { placements: PlanNodeGridPlacement[]; rowCount: number } => {
+export const getPlanGridLayoutWithOptions = (
+	planDoc: PlanDoc,
+	options: PlanGridLayoutOptions,
+): { placements: PlanNodeGridPlacement[]; rowCount: number } => {
 	const placements: PlanNodeGridPlacement[] = [];
 	const leafCountCache = new Map<string, number>();
 
@@ -182,7 +210,7 @@ export const getPlanGridLayout = (planDoc: PlanDoc): { placements: PlanNodeGridP
 			return;
 		}
 
-		const rowSpan = computeLeafCount(planDoc, nodeId, leafCountCache);
+		const rowSpan = computeLeafCount(planDoc, nodeId, leafCountCache, options);
 
 		placements.push({
 			nodeId,
@@ -198,23 +226,28 @@ export const getPlanGridLayout = (planDoc: PlanDoc): { placements: PlanNodeGridP
 		}
 
 		let childRow = rowStart;
-		for (let i = 0; i < node.childIds.length; i += 1) {
-			const childId = node.childIds[i];
-			const childSpan = computeLeafCount(planDoc, childId, leafCountCache);
-			walk(childId, childRow, i, node.childIds.length);
+		const visibleChildIds = getVisibleChildIds(node, options);
+		for (let i = 0; i < visibleChildIds.length; i += 1) {
+			const childId = visibleChildIds[i];
+			const childSpan = computeLeafCount(planDoc, childId, leafCountCache, options);
+			walk(childId, childRow, i, visibleChildIds.length);
 			childRow += childSpan;
 		}
 	};
 
 	for (let i = 0; i < planDoc.rootIds.length; i += 1) {
 		const rootId = planDoc.rootIds[i];
-		const rootSpan = computeLeafCount(planDoc, rootId, leafCountCache);
+		const rootSpan = computeLeafCount(planDoc, rootId, leafCountCache, options);
 		walk(rootId, currentRow, i, planDoc.rootIds.length);
 		currentRow += rootSpan;
 	}
 
 	const rowCount = currentRow - 1;
 	return { placements, rowCount: rowCount > 0 ? rowCount : 1 };
+};
+
+export const getPlanGridLayout = (planDoc: PlanDoc): { placements: PlanNodeGridPlacement[]; rowCount: number } => {
+	return getPlanGridLayoutWithOptions(planDoc, {});
 };
 
 export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNodeRollup> => {

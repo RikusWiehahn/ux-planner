@@ -59,7 +59,6 @@ const getImmediateParentLabel = (props: { nodeId: string; nodesById: Record<stri
 export const ExecutionGridView = () => {
 	const plan = usePlan();
 	const [selectedColumnId, setSelectedColumnId] = useState<string>("");
-	const [scope, setScope] = useState<"leavesOnly" | "includeRollups">("leavesOnly");
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
@@ -90,9 +89,6 @@ export const ExecutionGridView = () => {
 			}
 
 			const isLeaf = node.childIds.length === 0;
-			if (scope === "leavesOnly" && !isLeaf) {
-				continue;
-			}
 
 			const rollup = rollupsByNodeId[nodeId] ?? { importance: 0, ease: 0, timeHours: 0 };
 			const leafMetrics = node.leafMetrics;
@@ -150,7 +146,7 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [completionByNodeId, plan.planDoc.nodesById, rollupsByNodeId, scope, selectedColumnIndex]);
+	}, [completionByNodeId, plan.planDoc.nodesById, rollupsByNodeId, selectedColumnIndex]);
 
 	const columns = 5;
 
@@ -207,15 +203,6 @@ export const ExecutionGridView = () => {
 								</option>
 							);
 						})}
-					</select>
-
-					<select
-						value={scope}
-						onChange={(e) => setScope(e.target.value === "includeRollups" ? "includeRollups" : "leavesOnly")}
-						className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
-					>
-						<option value="leavesOnly">Leaves only</option>
-						<option value="includeRollups">Include rollups</option>
 					</select>
 				</div>
 			</div>
