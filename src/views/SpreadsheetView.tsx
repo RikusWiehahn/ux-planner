@@ -241,7 +241,7 @@ export const SpreadsheetView = () => {
 														>
 															{displayedDone ? "✓" : "✕"}
 														</button>
-														{node.childIds.length > 0 ? (
+														{node.childIds.length > 0 && !displayedDone ? (
 															<div
 																className={`${getCompletionBadgeClassName(completion.pct)} px-1.5 py-0 h-auto min-w-0 text-[10px] font-semibold`}
 															>
