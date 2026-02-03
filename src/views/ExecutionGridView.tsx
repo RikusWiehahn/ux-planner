@@ -61,6 +61,7 @@ export const ExecutionGridView = () => {
 	const [selectedColumnId, setSelectedColumnId] = useState<string>("");
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 	const [childLimitPerParent, setChildLimitPerParent] = useState<number | null>(null);
+	const [isHidingPlaceholders, setIsHidingPlaceholders] = useState<boolean>(false);
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
 	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
 
@@ -98,21 +99,22 @@ export const ExecutionGridView = () => {
 				}
 			}
 
-			if (node.label.trim() === "") {
-				continue;
-			}
-
 			const isLeaf = node.childIds.length === 0;
 			const leafMetrics = node.leafMetrics;
 
-			if (!isLeaf || !leafMetrics) {
-				continue;
+			if (isHidingPlaceholders) {
+				if (node.label.trim() === "") {
+					continue;
+				}
+				if (!isLeaf || !leafMetrics) {
+					continue;
+				}
 			}
 
 			const rollup = rollupsByNodeId[nodeId] ?? { importance: 0, ease: 0, timeHours: 0 };
-			const importance = leafMetrics.importance;
-			const ease = leafMetrics.ease;
-			const timeHours = leafMetrics.timeHours;
+			const importance = isLeaf ? (leafMetrics ? leafMetrics.importance : 0) : rollup.importance;
+			const ease = isLeaf ? (leafMetrics ? leafMetrics.ease : 0) : rollup.ease;
+			const timeHours = isLeaf ? (leafMetrics ? leafMetrics.timeHours : 0) : rollup.timeHours;
 			const completion =
 				completionByNodeId[nodeId] ?? { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 			const completionPct = completion.pct;
@@ -163,7 +165,14 @@ export const ExecutionGridView = () => {
 		});
 
 		return items;
-	}, [childLimitPerParent, completionByNodeId, plan.planDoc.nodesById, rollupsByNodeId, selectedColumnIndex]);
+	}, [
+		childLimitPerParent,
+		completionByNodeId,
+		isHidingPlaceholders,
+		plan.planDoc.nodesById,
+		rollupsByNodeId,
+		selectedColumnIndex,
+	]);
 
 	const columns = 5;
 
@@ -208,6 +217,16 @@ export const ExecutionGridView = () => {
 				</div>
 
 				<div className="flex items-center gap-2">
+					<label className="flex select-none items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900">
+						<input
+							type="checkbox"
+							checked={isHidingPlaceholders}
+							onChange={(e) => setIsHidingPlaceholders(e.target.checked)}
+							className="h-3.5 w-3.5"
+						/>
+						Hide placeholders
+					</label>
+
 					<select
 						value={selectedColumnId || (plan.planDoc.columns[plan.planDoc.columns.length - 1]?.id ?? "")}
 						onChange={(e) => setSelectedColumnId(e.target.value)}
