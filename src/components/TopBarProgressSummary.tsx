@@ -6,23 +6,28 @@ import { ModalWrapper } from "@/components/ModalWrapper";
 import { SecondaryButton } from "@/components/SecondaryButton";
 import { getCompletionBadgeClassName } from "@/components/completionBadge";
 import { usePlan } from "@/plan/PlanContext";
+import type { PlanNode } from "@/plan/types";
 
 export const TopBarProgressSummary = () => {
 	const plan = usePlan();
 	const [isOpen, setIsOpen] = useState(false);
 
 	const summary = useMemo(() => {
-		let doneLeaves = 0;
-		let totalLeaves = 0;
+		const nodesById: Record<string, PlanNode> = plan.planDoc.nodesById;
+		const columns = plan.planDoc.columns;
+
+		const columnCount = Math.max(1, columns.length);
+
 		let totalHoursEstimated = 0;
 		let totalHoursComplete = 0;
+		let totalLeaves = 0;
+		let doneLeaves = 0;
 
-		for (const nodeId of Object.keys(plan.planDoc.nodesById)) {
-			const node = plan.planDoc.nodesById[nodeId];
+		for (const nodeId of Object.keys(nodesById)) {
+			const node = nodesById[nodeId];
 			if (!node) {
 				continue;
 			}
-
 			if (node.childIds.length > 0) {
 				continue;
 			}
@@ -35,6 +40,50 @@ export const TopBarProgressSummary = () => {
 				totalHoursComplete += timeHours;
 			}
 		}
+
+		const columnSummaries = Array.from({ length: columnCount }, (_, columnIndex) => {
+			let totalHours = 0;
+			let doneHours = 0;
+			let totalLeavesInColumn = 0;
+			let doneLeavesInColumn = 0;
+
+			for (const nodeId of Object.keys(nodesById)) {
+				const node = nodesById[nodeId];
+				if (!node) {
+					continue;
+				}
+				if (node.columnIndex !== columnIndex) {
+					continue;
+				}
+				if (node.childIds.length > 0) {
+					continue;
+				}
+
+				totalLeavesInColumn += 1;
+				const timeHours = node.leafMetrics ? node.leafMetrics.timeHours : 0;
+				totalHours += timeHours;
+				if (node.leafDone) {
+					doneLeavesInColumn += 1;
+					doneHours += timeHours;
+				}
+			}
+
+			const completionPct =
+				totalHours > 0
+					? Math.round((doneHours / totalHours) * 100)
+					: totalLeavesInColumn > 0 && doneLeavesInColumn === totalLeavesInColumn
+						? 100
+						: 0;
+			const label = columns[columnIndex] ? columns[columnIndex].label : `Depth ${columnIndex}`;
+
+			return {
+				columnIndex,
+				label,
+				totalHours,
+				doneHours,
+				completionPct,
+			};
+		});
 
 		const overallCompletionPct =
 			totalHoursEstimated > 0
@@ -49,8 +98,9 @@ export const TopBarProgressSummary = () => {
 			totalHoursEstimated,
 			totalHoursComplete,
 			totalHoursToDo,
+			columnSummaries,
 		};
-	}, [plan.planDoc.nodesById]);
+	}, [plan.planDoc]);
 
 	const formatHours = (hours: number) => {
 		if (!Number.isFinite(hours)) {
@@ -102,6 +152,34 @@ export const TopBarProgressSummary = () => {
 							{formatHours(summary.totalHoursToDo)} hrs
 						</div>
 					</div>
+
+					{summary.columnSummaries.length > 0 ? (
+						<div className="mt-4">
+							<div className="text-xs font-semibold text-zinc-950">By depth</div>
+							<div className="mt-2 flex flex-col gap-1 rounded-md border border-zinc-200 bg-white p-2">
+								{summary.columnSummaries
+									.filter((column) => column.columnIndex >= 3)
+									.map((column) => {
+									return (
+										<div
+											key={column.columnIndex}
+											className="flex items-center justify-between gap-3 rounded-md px-1.5 py-1 hover:bg-zinc-50"
+										>
+											<div className="text-zinc-500">{column.label}</div>
+											<div className="flex items-center gap-2">
+												<div className="text-[11px] text-zinc-500">
+													{formatHours(column.doneHours)}/{formatHours(column.totalHours)} hrs
+												</div>
+												<div className={getCompletionBadgeClassName(column.completionPct)}>
+													{column.completionPct}%
+												</div>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					) : null}
 
 					<div className="mt-4">
 						<SecondaryButton

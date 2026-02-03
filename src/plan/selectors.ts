@@ -222,9 +222,9 @@ export const getPlanGridLayout = (planDoc: PlanDoc): { placements: PlanNodeGridP
 };
 
 export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNodeRollup> => {
-	const cache = new Map<string, PlanNodeRollup>();
+	const cache = new Map<string, { importanceSum: number; easeSum: number; timeHours: number; leafCount: number }>();
 
-	const compute = (nodeId: string): PlanNodeRollup => {
+	const compute = (nodeId: string): { importanceSum: number; easeSum: number; timeHours: number; leafCount: number } => {
 		const cached = cache.get(nodeId);
 		if (cached) {
 			return cached;
@@ -232,7 +232,7 @@ export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNod
 
 		const node = planDoc.nodesById[nodeId];
 		if (!node) {
-			const empty = { importance: 0, ease: 0, timeHours: 0 };
+			const empty = { importanceSum: 0, easeSum: 0, timeHours: 0, leafCount: 1 };
 			cache.set(nodeId, empty);
 			return empty;
 		}
@@ -240,26 +240,29 @@ export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNod
 		if (node.childIds.length === 0) {
 			const metrics = node.leafMetrics;
 			const rollup = {
-				importance: metrics ? metrics.importance : 0,
-				ease: metrics ? metrics.ease : 0,
+				importanceSum: metrics ? metrics.importance : 0,
+				easeSum: metrics ? metrics.ease : 0,
 				timeHours: metrics ? metrics.timeHours : 0,
+				leafCount: 1,
 			};
 			cache.set(nodeId, rollup);
 			return rollup;
 		}
 
-		let importance = 0;
-		let ease = 0;
+		let importanceSum = 0;
+		let easeSum = 0;
 		let timeHours = 0;
+		let leafCount = 0;
 
 		for (const childId of node.childIds) {
 			const childRollup = compute(childId);
-			importance += childRollup.importance;
-			ease += childRollup.ease;
+			importanceSum += childRollup.importanceSum;
+			easeSum += childRollup.easeSum;
 			timeHours += childRollup.timeHours;
+			leafCount += childRollup.leafCount;
 		}
 
-		const rollup = { importance, ease, timeHours };
+		const rollup = { importanceSum, easeSum, timeHours, leafCount: leafCount > 0 ? leafCount : 1 };
 		cache.set(nodeId, rollup);
 		return rollup;
 	};
@@ -270,7 +273,14 @@ export const getPlanRollupsByNodeId = (planDoc: PlanDoc): Record<string, PlanNod
 
 	const result: Record<string, PlanNodeRollup> = {};
 	for (const [key, value] of cache.entries()) {
-		result[key] = value;
+		const leafCount = value.leafCount > 0 ? value.leafCount : 1;
+		const importanceAvg = value.importanceSum / leafCount;
+		const easeAvg = value.easeSum / leafCount;
+		result[key] = {
+			importance: Math.round(importanceAvg * 10) / 10,
+			ease: Math.round(easeAvg * 10) / 10,
+			timeHours: value.timeHours,
+		};
 	}
 
 	return result;

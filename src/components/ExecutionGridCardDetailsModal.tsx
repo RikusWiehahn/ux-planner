@@ -39,11 +39,11 @@ const getDoneCircleClassName = (isDone: boolean) => {
 		: "flex h-5 w-5 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700";
 };
 
-const getDescendantLeafIds = (props: { planDoc: PlanDoc; nodeId: string }) => {
+const getDescendantLeaves = (props: { planDoc: PlanDoc; nodeId: string }) => {
 	const visited = new Set<string>();
-	const leafIds: string[] = [];
+	const leaves: { leafId: string; parentId: string | null }[] = [];
 
-	const walk = (currentId: string) => {
+	const walk = (currentId: string, parentId: string | null) => {
 		if (visited.has(currentId)) {
 			return;
 		}
@@ -55,17 +55,17 @@ const getDescendantLeafIds = (props: { planDoc: PlanDoc; nodeId: string }) => {
 		}
 
 		if (node.childIds.length === 0) {
-			leafIds.push(currentId);
+			leaves.push({ leafId: currentId, parentId });
 			return;
 		}
 
 		for (const childId of node.childIds) {
-			walk(childId);
+			walk(childId, currentId);
 		}
 	};
 
-	walk(props.nodeId);
-	return leafIds;
+	walk(props.nodeId, null);
+	return leaves;
 };
 
 export const ExecutionGridCardDetailsModal = (props: {
@@ -79,7 +79,20 @@ export const ExecutionGridCardDetailsModal = (props: {
 	}
 
 	const node = props.planDoc.nodesById[props.nodeId];
-	const leafIds = node ? getDescendantLeafIds({ planDoc: props.planDoc, nodeId: props.nodeId }) : [];
+	const descendantLeaves = node ? getDescendantLeaves({ planDoc: props.planDoc, nodeId: props.nodeId }) : [];
+	const leafIds = descendantLeaves.map((leaf) => leaf.leafId);
+	const rootGroupKey = "__root__";
+	const descendantLeafIdsByParentId: Record<string, string[]> = {};
+	const descendantLeafParentGroupKeys: string[] = [];
+
+	for (const descendantLeaf of descendantLeaves) {
+		const groupKey = descendantLeaf.parentId ?? rootGroupKey;
+		if (!descendantLeafIdsByParentId[groupKey]) {
+			descendantLeafIdsByParentId[groupKey] = [];
+			descendantLeafParentGroupKeys.push(groupKey);
+		}
+		descendantLeafIdsByParentId[groupKey].push(descendantLeaf.leafId);
+	}
 
 	let totalLeaves = 0;
 	let doneLeaves = 0;
@@ -146,26 +159,46 @@ export const ExecutionGridCardDetailsModal = (props: {
 						<div className="mt-4">
 							<div className="text-xs font-semibold text-zinc-950">Descendant leaves</div>
 							<div className="mt-2 flex max-h-80 flex-col gap-1 overflow-auto rounded-md border border-zinc-200 bg-white p-2">
-								{leafIds.map((leafId) => {
-									const leaf = props.planDoc.nodesById[leafId];
-									if (!leaf) {
-										return null;
-									}
+								{descendantLeafParentGroupKeys.map((parentGroupKey) => {
+									const parentNodeId = parentGroupKey === rootGroupKey ? null : parentGroupKey;
+									const parentNode = parentNodeId ? props.planDoc.nodesById[parentNodeId] : null;
+									const parentTitle =
+										parentGroupKey === rootGroupKey
+											? "(This item)"
+											: clampText(getFirstLine(parentNode ? parentNode.label : "(missing)") || "(empty)", 100);
 
-									const leafTitle = clampText(getFirstLine(leaf.label) || "(empty)", 100);
-									const timeHours = leaf.leafMetrics ? leaf.leafMetrics.timeHours : 0;
+									const groupLeafIds = descendantLeafIdsByParentId[parentGroupKey] ?? [];
 
 									return (
-										<div
-											key={leafId}
-											className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 hover:bg-zinc-50"
-										>
-											<div className="flex min-w-0 items-center gap-2">
-												<div className={getDoneCircleClassName(leaf.leafDone)}>{leaf.leafDone ? "✓" : "✕"}</div>
-												<div className="min-w-0 truncate text-[11px] text-zinc-700">{leafTitle}</div>
-											</div>
-											<div className="shrink-0 text-[11px] text-zinc-500">
-												{timeHours ? `${formatHours(timeHours)} hrs` : "—"}
+										<div key={parentGroupKey} className="rounded-md px-1.5 py-1">
+											<div className="text-[11px] font-semibold text-zinc-500">{parentTitle}</div>
+											<div className="mt-1 flex flex-col gap-1">
+												{groupLeafIds.map((leafId) => {
+													const leaf = props.planDoc.nodesById[leafId];
+													if (!leaf) {
+														return null;
+													}
+
+													const leafTitle = clampText(getFirstLine(leaf.label) || "(empty)", 100);
+													const timeHours = leaf.leafMetrics ? leaf.leafMetrics.timeHours : 0;
+
+													return (
+														<div
+															key={leafId}
+															className="flex items-center justify-between gap-2 rounded-md py-1 pl-4 pr-1 hover:bg-zinc-50"
+														>
+															<div className="flex min-w-0 items-center gap-2">
+																<div className={getDoneCircleClassName(leaf.leafDone)}>
+																	{leaf.leafDone ? "✓" : "✕"}
+																</div>
+																<div className="min-w-0 truncate text-[11px] text-zinc-700">{leafTitle}</div>
+															</div>
+															<div className="shrink-0 text-[11px] text-zinc-500">
+																{timeHours ? `${formatHours(timeHours)} hrs` : "—"}
+															</div>
+														</div>
+													);
+												})}
 											</div>
 										</div>
 									);

@@ -61,7 +61,7 @@ const HomePage = () => {
 					</div>
 				</div>
 
-				<div className="w-full p-4">
+				<div className={twMerge("w-full", activeTab === "spreadsheet" ? "px-0 py-4" : "p-4")}>
 					{activeTab === "spreadsheet" ? <SpreadsheetView /> : null}
 
 					{activeTab === "executionGrid" ? (
