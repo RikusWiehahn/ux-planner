@@ -7,6 +7,7 @@ import { PlanProvider } from "@/plan/PlanContext";
 import { AddColumnUtility } from "@/plan/utilities/AddColumnUtility";
 import { ExportPlanUtility } from "@/plan/utilities/ExportPlanUtility";
 import { ImportPlanUtility } from "@/plan/utilities/ImportPlanUtility";
+import { SpreadsheetSyncUtility } from "@/plan/utilities/SpreadsheetSyncUtility";
 import { ExecutionGridView } from "@/views/ExecutionGridView";
 import { SpreadsheetView } from "@/views/SpreadsheetView";
 import { twMerge } from "tailwind-merge";
@@ -54,6 +55,7 @@ const HomePage = () => {
 						<div className="flex w-40 justify-end">
 							<MoreMenu ariaLabel="Page actions">
 								{activeTab === "spreadsheet" ? <AddColumnUtility /> : null}
+								<SpreadsheetSyncUtility />
 								<ExportPlanUtility />
 								<ImportPlanUtility />
 							</MoreMenu>
