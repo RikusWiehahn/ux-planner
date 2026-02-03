@@ -10,25 +10,12 @@ import { AddRootItemUtility } from "@/plan/utilities/AddRootItemUtility";
 import { DeleteNodeUtility } from "@/plan/utilities/DeleteNodeUtility";
 import { MoveChildItemUtility } from "@/plan/utilities/MoveChildItemUtility";
 import { MoveRootItemUtility } from "@/plan/utilities/MoveRootItemUtility";
-import {
-	getPlanCompletionByNodeId,
-	getPlanDoneByNodeId,
-	getPlanGridLayoutWithOptions,
-	getPlanRollupsByNodeId,
-} from "@/plan/selectors";
-import { useMemo, useState } from "react";
+import { getPlanCompletionByNodeId, getPlanDoneByNodeId, getPlanGridLayout, getPlanRollupsByNodeId } from "@/plan/selectors";
+import { useMemo } from "react";
 
 export const SpreadsheetView = () => {
 	const plan = usePlan();
-	const [childFocusColumnIndex, setChildFocusColumnIndex] = useState<number | null>(null);
-	const [childFocusLimit, setChildFocusLimit] = useState<number>(2);
-
-	const layout = useMemo(() => {
-		const childLimitByColumnIndex =
-			childFocusColumnIndex === null ? undefined : { [childFocusColumnIndex]: childFocusLimit };
-
-		return getPlanGridLayoutWithOptions(plan.planDoc, { childLimitByColumnIndex });
-	}, [childFocusColumnIndex, childFocusLimit, plan.planDoc]);
+	const layout = useMemo(() => getPlanGridLayout(plan.planDoc), [plan.planDoc]);
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
 	const doneByNodeId = useMemo(() => getPlanDoneByNodeId(plan.planDoc), [plan.planDoc]);
 	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
@@ -55,53 +42,6 @@ export const SpreadsheetView = () => {
 
 	return (
 		<div>
-			<div className="mb-2 flex items-center justify-end gap-2 text-xs">
-				<div className="text-zinc-500">Child focus</div>
-				<select
-					value={childFocusColumnIndex === null ? "" : String(childFocusColumnIndex)}
-					onChange={(e) => {
-						const raw = e.target.value;
-						if (raw === "") {
-							setChildFocusColumnIndex(null);
-							return;
-						}
-
-						const parsed = Number.parseInt(raw, 10);
-						const nextValue = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
-						setChildFocusColumnIndex(nextValue);
-					}}
-					className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
-				>
-					<option value="">Off</option>
-					{plan.planDoc.columns.map((col, idx) => {
-						return (
-							<option key={col.id} value={idx}>
-								Limit children of {col.label || `Level ${idx + 1}`}
-							</option>
-						);
-					})}
-				</select>
-
-				<select
-					value={String(childFocusLimit)}
-					disabled={childFocusColumnIndex === null}
-					onChange={(e) => {
-						const raw = e.target.value;
-						const parsed = Number.parseInt(raw, 10);
-						const nextValue = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
-						setChildFocusLimit(nextValue);
-					}}
-					className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900 disabled:opacity-50"
-				>
-					<option value="1">Show 1 child</option>
-					<option value="2">Show 2 children</option>
-					<option value="3">Show 3 children</option>
-					<option value="4">Show 4 children</option>
-					<option value="5">Show 5 children</option>
-					<option value="10">Show 10 children</option>
-				</select>
-			</div>
-
 			<div
 				className="grid gap-2"
 				style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(220px, 1fr))` }}
