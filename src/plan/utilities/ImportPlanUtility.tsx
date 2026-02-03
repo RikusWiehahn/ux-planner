@@ -6,13 +6,14 @@ import { SecondaryButton } from "@/components/SecondaryButton";
 import { TextInput } from "@/components/TextInput";
 import { parsePlanDoc } from "@/plan/parsePlanDoc";
 import { usePlan } from "@/plan/PlanContext";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export const ImportPlanUtility = () => {
 	const plan = usePlan();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [jsonText, setJsonText] = useState<string>("");
 	const [error, setError] = useState<string>("");
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
@@ -83,12 +84,23 @@ export const ImportPlanUtility = () => {
 				{error ? <div className="mt-2 text-xs text-red-700">{error}</div> : null}
 
 				<div className="mt-3 flex items-center justify-between gap-2">
-					<input
-						type="file"
-						accept="application/json,.json"
-						onChange={onFileChange}
-						className="text-xs text-zinc-700"
-					/>
+					<div className="flex items-center gap-2">
+						<input
+							ref={fileInputRef}
+							type="file"
+							accept="application/json,.json"
+							onChange={onFileChange}
+							className="hidden"
+						/>
+
+						<SecondaryButton
+							onPress={() => {
+								fileInputRef.current?.click();
+							}}
+						>
+							Upload JSON file
+						</SecondaryButton>
+					</div>
 
 					<div className="flex items-center gap-2">
 						<SecondaryButton

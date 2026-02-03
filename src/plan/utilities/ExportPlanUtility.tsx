@@ -1,6 +1,7 @@
 "use client";
 
 import { ModalWrapper } from "@/components/ModalWrapper";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { SecondaryButton } from "@/components/SecondaryButton";
 import { TextInput } from "@/components/TextInput";
 import { usePlan } from "@/plan/PlanContext";
@@ -13,6 +14,20 @@ export const ExportPlanUtility = () => {
 	const jsonText = useMemo(() => {
 		return JSON.stringify(plan.planDoc, null, "\t");
 	}, [plan.planDoc]);
+
+	const downloadFile = () => {
+		const blob = new Blob([jsonText], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "ux-planner.json";
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+
+		URL.revokeObjectURL(url);
+	};
 
 	return (
 		<div>
@@ -42,7 +57,8 @@ export const ExportPlanUtility = () => {
 					/>
 				</div>
 
-				<div className="mt-3 flex items-center justify-end">
+				<div className="mt-3 flex items-center justify-end gap-2">
+					<PrimaryButton onPress={downloadFile}>Download file</PrimaryButton>
 					<SecondaryButton onPress={() => setIsOpen(false)}>Close</SecondaryButton>
 				</div>
 			</ModalWrapper>
