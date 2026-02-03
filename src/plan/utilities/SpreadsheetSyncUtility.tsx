@@ -316,19 +316,6 @@ export const SpreadsheetSyncUtility = () => {
 		}
 	};
 
-	const initializeSpreadsheet = async () => {
-		try {
-			const json = defaultPayloadText;
-			JSON.parse(json);
-			setPayloadText(json);
-
-			await uploadJsonToSpreadsheet(json, "Initializing");
-			setStatusText("Initialized spreadsheet (saved). Click Fetch to verify.");
-		} catch {
-			setErrorText("Initialize failed.");
-		}
-	};
-
 	const saveToSpreadsheet = async () => {
 		try {
 			const json = payloadText;
@@ -378,38 +365,48 @@ export const SpreadsheetSyncUtility = () => {
 						</div>
 					</div>
 
-					<div className="flex flex-wrap items-center gap-2">
-						<PrimaryButton onPress={fetchFromSpreadsheet} isDisabled={isBusy || !url}>
-							Fetch
-						</PrimaryButton>
+					<div className="space-y-3">
+						<div>
+							<InputLabel>When pulling changes from the spreadsheet</InputLabel>
+							<div className="mt-2 flex flex-wrap items-center gap-2">
+								<PrimaryButton onPress={fetchFromSpreadsheet} isDisabled={isBusy || !url}>
+									Fetch
+								</PrimaryButton>
 
-						<SecondaryButton
-							onPress={() => {
-								void initializeSpreadsheet();
-							}}
-							isDisabled={isBusy || !url}
-						>
-							Initialize sheet
-						</SecondaryButton>
+								<SecondaryButton
+									onPress={applyToApp}
+									isDisabled={isBusy || payloadText.trim().length === 0}
+								>
+									Apply to app
+								</SecondaryButton>
+							</div>
+						</div>
 
-						<SecondaryButton
-							onPress={() => {
-								setPayloadText(defaultPayloadText);
-								setErrorText("");
-								setStatusText("Loaded current plan into editor.");
-							}}
-							isDisabled={isBusy}
-						>
-							Use current plan
-						</SecondaryButton>
+						<div>
+							<InputLabel>Grab the current plan and save it to the sheet</InputLabel>
+							<div className="mt-1 text-xs text-zinc-600">
+								First time: click “Use current plan”, then “Save”.
+							</div>
+							<div className="mt-2 flex flex-wrap items-center gap-2">
+								<SecondaryButton
+									onPress={() => {
+										setPayloadText(defaultPayloadText);
+										setErrorText("");
+										setStatusText("Loaded current plan into editor.");
+									}}
+									isDisabled={isBusy}
+								>
+									Use current plan
+								</SecondaryButton>
 
-						<SecondaryButton onPress={applyToApp} isDisabled={isBusy || payloadText.trim().length === 0}>
-							Apply to app
-						</SecondaryButton>
-
-						<PrimaryButton onPress={saveToSpreadsheet} isDisabled={isBusy || !url || payloadText.trim().length === 0}>
-							Save
-						</PrimaryButton>
+								<PrimaryButton
+									onPress={saveToSpreadsheet}
+									isDisabled={isBusy || !url || payloadText.trim().length === 0}
+								>
+									Save
+								</PrimaryButton>
+							</div>
+						</div>
 					</div>
 
 					{errorText ? <div className="text-xs text-red-700">{errorText}</div> : null}
