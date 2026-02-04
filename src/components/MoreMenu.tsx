@@ -84,7 +84,7 @@ export const MoreMenu = (props: {
 					id={menuId}
 					role="menu"
 					className={twMerge(
-						"absolute right-0 z-10 mt-2 w-56 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg",
+						"absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg",
 						props.menuClassName ?? "",
 					)}
 				>
