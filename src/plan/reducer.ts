@@ -1,4 +1,4 @@
-import type { PlanAction, PlanDoc } from "@/plan/types";
+import type { PlanAction, PlanClipboardTree, PlanDoc, PlanNode } from "@/plan/types";
 import { createEmptyPlanDoc } from "@/plan/types";
 
 const createId = (prefix: string) => {
@@ -10,6 +10,49 @@ const createId = (prefix: string) => {
 	}
 
 	return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+};
+
+const getMaxColumnIndexInClipboardTree = (tree: PlanClipboardTree): number => {
+	let max = tree.columnIndex;
+	for (const child of tree.children) {
+		const childMax = getMaxColumnIndexInClipboardTree(child);
+		if (childMax > max) {
+			max = childMax;
+		}
+	}
+	return max;
+};
+
+const cloneClipboardSubtree = (props: {
+	clipboardTree: PlanClipboardTree;
+	parentId: string | null;
+	nodesById: Record<string, PlanNode>;
+}): string => {
+	const nodeId = createId("node");
+	const childIds: string[] = [];
+
+	for (const child of props.clipboardTree.children) {
+		const childId = cloneClipboardSubtree({
+			clipboardTree: child,
+			parentId: nodeId,
+			nodesById: props.nodesById,
+		});
+		childIds.push(childId);
+	}
+
+	props.nodesById[nodeId] = {
+		id: nodeId,
+		columnIndex: props.clipboardTree.columnIndex,
+		parentId: props.parentId,
+		title: props.clipboardTree.title,
+		label: props.clipboardTree.label,
+		childIds,
+		leafMetrics: props.clipboardTree.leafMetrics,
+		leafDone: props.clipboardTree.leafDone,
+		isCollapsed: props.clipboardTree.isCollapsed,
+	};
+
+	return nodeId;
 };
 
 export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
@@ -128,6 +171,57 @@ export const planReducer = (state: PlanDoc, action: PlanAction): PlanDoc => {
 		nextRootIds[nextIndex] = temp;
 
 		return { ...state, rootIds: nextRootIds };
+	}
+
+	if (action.type === "plan/nodePasteSubtree") {
+		const maxColumnIndex = getMaxColumnIndexInClipboardTree(action.clipboardTree);
+		if (maxColumnIndex >= state.columns.length) {
+			return state;
+		}
+
+		if (action.parentId === null) {
+			if (action.clipboardTree.columnIndex !== 0) {
+				return state;
+			}
+
+			const nextNodesByIdAdditions: Record<string, PlanNode> = {};
+			const nextRootId = cloneClipboardSubtree({
+				clipboardTree: action.clipboardTree,
+				parentId: null,
+				nodesById: nextNodesByIdAdditions,
+			});
+
+			return {
+				...state,
+				rootIds: [...state.rootIds, nextRootId],
+				nodesById: { ...state.nodesById, ...nextNodesByIdAdditions },
+			};
+		}
+
+		const parent = state.nodesById[action.parentId];
+		if (!parent) {
+			return state;
+		}
+
+		if (parent.columnIndex !== action.clipboardTree.columnIndex - 1) {
+			return state;
+		}
+
+		const nextNodesByIdAdditions: Record<string, PlanNode> = {};
+		const nextRootId = cloneClipboardSubtree({
+			clipboardTree: action.clipboardTree,
+			parentId: parent.id,
+			nodesById: nextNodesByIdAdditions,
+		});
+
+		return {
+			...state,
+			nodesById: {
+				...state.nodesById,
+				...nextNodesByIdAdditions,
+				[parent.id]: { ...parent, childIds: [...parent.childIds, nextRootId] },
+			},
+		};
 	}
 
 	if (action.type === "plan/nodeSetTitle") {

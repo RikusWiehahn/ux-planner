@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import type { ReactNode } from "react";
 
@@ -12,7 +12,8 @@ export const MoreMenu = (props: {
 }) => {
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const rootRef = useRef<HTMLDivElement | null>(null);
-	const menuId = useMemo(() => `more-menu-${Math.random().toString(36).slice(2)}`, []);
+	const reactId = useId();
+	const menuId = useMemo(() => `more-menu-${reactId}`, [reactId]);
 
 	useEffect(() => {
 		if (!isOpen) {

@@ -21,6 +21,16 @@ export type PlanNode = {
 	isCollapsed: boolean;
 };
 
+export type PlanClipboardTree = {
+	columnIndex: number;
+	title: string;
+	label: string;
+	leafMetrics: PlanLeafMetrics | null;
+	leafDone: boolean;
+	isCollapsed: boolean;
+	children: PlanClipboardTree[];
+};
+
 export type PlanDoc = {
 	version: 1;
 	columns: PlanColumn[];
@@ -38,6 +48,7 @@ export type PlanAction =
 	| { type: "plan/rootMove"; nodeId: string; direction: "up" | "down" }
 	| { type: "plan/nodeAddChild"; parentId: string }
 	| { type: "plan/nodeMoveWithinParent"; nodeId: string; direction: "up" | "down" }
+	| { type: "plan/nodePasteSubtree"; parentId: string | null; clipboardTree: PlanClipboardTree }
 	| { type: "plan/nodeSetTitle"; nodeId: string; title: string }
 	| { type: "plan/nodeSetLabel"; nodeId: string; label: string }
 	| { type: "plan/nodeSetLeafMetrics"; nodeId: string; leafMetrics: PlanLeafMetrics | null }

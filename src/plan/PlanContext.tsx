@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from "react";
 import type { ReactNode } from "react";
 import { parsePlanDoc } from "@/plan/parsePlanDoc";
 import { planReducer } from "@/plan/reducer";
@@ -44,11 +44,10 @@ const savePlanDocToStorage = (doc: PlanDoc) => {
 const PlanContext = createContext<{
 	planDoc: PlanDoc;
 	dispatch: (action: PlanAction) => void;
-	isHydrated: boolean;
 } | null>(null);
 
 export const PlanProvider = (props: { children: ReactNode }) => {
-	const [isHydrated, setIsHydrated] = useState<boolean>(false);
+	const hasLoadedFromStorageRef = useRef<boolean>(false);
 
 	const [planDoc, dispatch] = useReducer(planReducer, undefined, () => {
 		return createEmptyPlanDoc();
@@ -56,20 +55,20 @@ export const PlanProvider = (props: { children: ReactNode }) => {
 
 	useEffect(() => {
 		dispatch({ type: "plan/replaceDoc", doc: loadPlanDocFromStorage() });
-		setIsHydrated(true);
+		hasLoadedFromStorageRef.current = true;
 	}, []);
 
 	useEffect(() => {
-		if (!isHydrated) {
+		if (!hasLoadedFromStorageRef.current) {
 			return;
 		}
 
 		savePlanDocToStorage(planDoc);
-	}, [planDoc, isHydrated]);
+	}, [planDoc]);
 
 	const value = useMemo(() => {
-		return { planDoc, dispatch, isHydrated };
-	}, [planDoc, isHydrated]);
+		return { planDoc, dispatch };
+	}, [planDoc]);
 
 	return <PlanContext.Provider value={value}>{props.children}</PlanContext.Provider>;
 };

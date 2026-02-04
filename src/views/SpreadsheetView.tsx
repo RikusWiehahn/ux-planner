@@ -8,6 +8,7 @@ import { AddChildItemUtility } from "@/plan/utilities/AddChildItemUtility";
 import { DeleteColumnUtility } from "@/plan/utilities/DeleteColumnUtility";
 import { AddRootItemUtility } from "@/plan/utilities/AddRootItemUtility";
 import { DeleteNodeUtility } from "@/plan/utilities/DeleteNodeUtility";
+import { CopyToNewParentUtility } from "@/plan/utilities/CopyToNewParentUtility";
 import { MoveChildItemUtility } from "@/plan/utilities/MoveChildItemUtility";
 import { MoveRootItemUtility } from "@/plan/utilities/MoveRootItemUtility";
 import {
@@ -149,6 +150,7 @@ export const SpreadsheetView = () => {
 						<div className="pointer-events-none absolute right-0 top-0 z-10 opacity-0 transition-opacity group-hover:opacity-100">
 							<div className="pointer-events-auto">
 								<MoreMenu ariaLabel="Cell actions">
+									<CopyToNewParentUtility nodeId={node.id} />
 									<AddChildItemUtility parentId={node.id} />
 									{isRoot ? (
 										<MoveRootItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
