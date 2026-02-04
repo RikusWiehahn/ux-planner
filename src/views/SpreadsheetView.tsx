@@ -147,32 +147,33 @@ export const SpreadsheetView = () => {
 			>
 				<div className="flex h-full flex-col">
 					<div className="relative min-w-0">
-						<div className="pointer-events-none absolute right-0 top-0 z-10 opacity-0 transition-opacity group-hover:opacity-100">
-							<div className="pointer-events-auto">
-								<MoreMenu ariaLabel="Cell actions">
-									<CopyToNewParentUtility nodeId={node.id} />
-									<AddChildItemUtility parentId={node.id} />
-									{isRoot ? (
-										<MoveRootItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
-									) : (
-										<MoveChildItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
-									)}
-									{isRoot ? (
-										<MoveRootItemUtility
-											nodeId={node.id}
-											direction="down"
-											isDisabled={placement.indexInParent === placement.siblingsCount - 1}
-										/>
-									) : (
-										<MoveChildItemUtility
-											nodeId={node.id}
-											direction="down"
-											isDisabled={placement.indexInParent === placement.siblingsCount - 1}
-										/>
-									)}
-									<DeleteNodeUtility nodeId={node.id} />
-								</MoreMenu>
-							</div>
+						<div className="absolute right-0 top-0 z-10">
+							<MoreMenu
+								ariaLabel="Cell actions"
+								buttonClassName="opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<CopyToNewParentUtility nodeId={node.id} />
+								<AddChildItemUtility parentId={node.id} />
+								{isRoot ? (
+									<MoveRootItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+								) : (
+									<MoveChildItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+								)}
+								{isRoot ? (
+									<MoveRootItemUtility
+										nodeId={node.id}
+										direction="down"
+										isDisabled={placement.indexInParent === placement.siblingsCount - 1}
+									/>
+								) : (
+									<MoveChildItemUtility
+										nodeId={node.id}
+										direction="down"
+										isDisabled={placement.indexInParent === placement.siblingsCount - 1}
+									/>
+								)}
+								<DeleteNodeUtility nodeId={node.id} />
+							</MoreMenu>
 						</div>
 
 						<div className="flex min-w-0 items-start gap-0.5">

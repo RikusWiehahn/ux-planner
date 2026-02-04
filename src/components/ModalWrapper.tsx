@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 
 export const ModalWrapper = (props: {
 	isOpen: boolean;
@@ -10,22 +8,12 @@ export const ModalWrapper = (props: {
 	children: ReactNode;
 	onClose: () => void;
 }) => {
-	const [isMounted, setIsMounted] = useState<boolean>(false);
-
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
-
 	if (!props.isOpen) {
 		return null;
 	}
 
-	if (!isMounted) {
-		return null;
-	}
-
-	return createPortal(
-		<div className="fixed inset-0 z-1000 flex items-center justify-center p-4">
+	return (
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 			<button
 				type="button"
 				onClick={props.onClose}
@@ -38,8 +26,7 @@ export const ModalWrapper = (props: {
 
 				<div className={props.title ? "mt-3" : ""}>{props.children}</div>
 			</div>
-		</div>,
-		document.body,
+		</div>
 	);
 };
 
