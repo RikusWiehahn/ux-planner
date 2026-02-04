@@ -42,42 +42,44 @@ export const SpreadsheetView = () => {
 
 	return (
 		<div>
-			<div className="max-w-full overflow-x-auto">
-				<div className="w-full min-w-0 px-4">
-					<div
-						className="grid gap-2"
-						style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(100px, 1fr))` }}
-					>
-						{plan.planDoc.columns.map((col, idx) => {
-							return (
-								<div key={col.id} className="rounded-md bg-zinc-50 p-1.5">
-									<div className="flex items-center justify-between gap-2">
-										<TextInput
-											value={col.label}
-											onChange={(nextValue) => {
-												plan.dispatch({
-													type: "plan/columnRename",
-													columnId: col.id,
-													label: nextValue,
-												});
-											}}
-											placeholder={`Level ${idx + 1}`}
-										/>
+			<div className="max-w-full">
+				<div className="w-full min-w-0">
+					<div className="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50 pb-2 pt-2">
+						<div
+							className="grid gap-2"
+							style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+						>
+							{plan.planDoc.columns.map((col, idx) => {
+								return (
+									<div key={col.id} className="rounded-md bg-zinc-50 p-1.5">
+										<div className="flex items-center justify-between gap-2">
+											<TextInput
+												value={col.label}
+												onChange={(nextValue) => {
+													plan.dispatch({
+														type: "plan/columnRename",
+														columnId: col.id,
+														label: nextValue,
+													});
+												}}
+												placeholder={`Level ${idx + 1}`}
+											/>
 
-										<MoreMenu ariaLabel="Column actions">
-											{idx === 0 ? <AddRootItemUtility /> : null}
-											<DeleteColumnUtility columnIndex={idx} />
-										</MoreMenu>
+											<MoreMenu ariaLabel="Column actions">
+												{idx === 0 ? <AddRootItemUtility /> : null}
+												<DeleteColumnUtility columnIndex={idx} />
+											</MoreMenu>
+										</div>
 									</div>
-								</div>
-							);
-						})}
+								);
+							})}
+						</div>
 					</div>
 
 					<div
 						className="mt-2 grid gap-0 rounded-md border border-zinc-200 bg-white"
 						style={{
-							gridTemplateColumns: `repeat(${columnCount}, minmax(100px, 1fr))`,
+							gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
 							gridAutoRows: "minmax(100px, auto)",
 						}}
 					>

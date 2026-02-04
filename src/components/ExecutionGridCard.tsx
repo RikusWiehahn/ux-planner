@@ -20,8 +20,8 @@ export const ExecutionGridCard = (props: {
 		<div
 			className={
 				isClickable
-					? "cursor-pointer rounded-md border border-zinc-200 bg-white p-2 transition-colors hover:bg-zinc-50"
-					: "rounded-md border border-zinc-200 bg-white p-2"
+					? "flex h-full cursor-pointer flex-col rounded-md border border-zinc-200 bg-white p-2 transition-colors hover:bg-zinc-50"
+					: "flex h-full flex-col rounded-md border border-zinc-200 bg-white p-2"
 			}
 			onClick={isClickable ? props.onPress : undefined}
 			role={isClickable ? "button" : undefined}
@@ -48,7 +48,7 @@ export const ExecutionGridCard = (props: {
 				<div className="mt-1 whitespace-pre-wrap text-[11px] text-zinc-600">{props.labelFull}</div>
 			) : null}
 
-			<div className="mt-2 border-t border-zinc-200 pt-1">
+			<div className="mt-auto border-t border-zinc-200 pt-1">
 				<div className="flex flex-wrap items-center gap-1 text-[10px] font-semibold text-zinc-700">
 					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
 						<span className="font-mono text-zinc-500">I</span>

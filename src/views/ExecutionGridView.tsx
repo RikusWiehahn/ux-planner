@@ -21,6 +21,7 @@ type RankedItem = {
 type PathNode = {
 	parentId: string | null;
 	label: string;
+	columnIndex: number;
 };
 
 const getFirstLine = (value: string) => {
@@ -56,12 +57,57 @@ const getImmediateParentLabel = (props: { nodeId: string; nodesById: Record<stri
 	return clampText(getFirstLine(parent.label), 100);
 };
 
+const getAncestorPathLabel = (props: {
+	nodeId: string;
+	nodesById: Record<string, PathNode>;
+	includeColumnIndexes: number[];
+}) => {
+	const visited = new Set<string>();
+	const labels: string[] = [];
+	const included = new Set<number>(props.includeColumnIndexes);
+
+	let currentId: string | null = props.nodeId;
+	while (currentId !== null) {
+		const currentNode: PathNode | undefined = props.nodesById[currentId];
+		if (!currentNode) {
+			break;
+		}
+
+		const parentId: string | null = currentNode.parentId;
+		if (!parentId) {
+			break;
+		}
+
+		if (visited.has(parentId)) {
+			break;
+		}
+		visited.add(parentId);
+
+		const parent = props.nodesById[parentId];
+		if (!parent) {
+			break;
+		}
+
+		if (included.has(parent.columnIndex)) {
+			const label = clampText(getFirstLine(parent.label), 60);
+			if (label) {
+				labels.push(label);
+			}
+		}
+
+		currentId = parentId;
+	}
+
+	labels.reverse();
+	return clampText(labels.join(" / "), 160);
+};
+
 export const ExecutionGridView = () => {
 	const plan = usePlan();
 	const [selectedColumnId, setSelectedColumnId] = useState<string>("");
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-	const [childLimitPerParent, setChildLimitPerParent] = useState<number | null>(null);
 	const [isHidingPlaceholders, setIsHidingPlaceholders] = useState<boolean>(false);
+	const [isHidingDone, setIsHidingDone] = useState<boolean>(false);
 	const rollupsByNodeId = useMemo(() => getPlanRollupsByNodeId(plan.planDoc), [plan.planDoc]);
 	const completionByNodeId = useMemo(() => getPlanCompletionByNodeId(plan.planDoc), [plan.planDoc]);
 
@@ -89,16 +135,6 @@ export const ExecutionGridView = () => {
 				continue;
 			}
 
-			if (childLimitPerParent !== null && node.parentId) {
-				const parent = plan.planDoc.nodesById[node.parentId];
-				if (parent) {
-					const idxInParent = parent.childIds.indexOf(nodeId);
-					if (idxInParent >= childLimitPerParent) {
-						continue;
-					}
-				}
-			}
-
 			const isLeaf = node.childIds.length === 0;
 			const leafMetrics = node.leafMetrics;
 
@@ -119,24 +155,50 @@ export const ExecutionGridView = () => {
 				completionByNodeId[nodeId] ?? { doneLeaves: 0, totalLeaves: 0, doneHours: 0, totalHours: 0, pct: 0 };
 			const completionPct = completion.pct;
 
+			if (isHidingDone && completionPct === 100) {
+				continue;
+			}
+
 			if (importance === 0 || ease === 0) {
 				continue;
 			}
 
 			const labelFull = node.label.trim();
 			const labelFirstLine = clampText(getFirstLine(node.label) || "(empty)", 100);
-			const parentLabel = getImmediateParentLabel({
-				nodeId,
-				nodesById: plan.planDoc.nodesById,
-			});
+
+			let displayLabelFirstLine = labelFirstLine;
+			let displayLabelFull = labelFull;
+			let parentLabel =
+				selectedColumnIndex >= 3
+					? getAncestorPathLabel({ nodeId, nodesById: plan.planDoc.nodesById, includeColumnIndexes: [1, 2] })
+					: getImmediateParentLabel({ nodeId, nodesById: plan.planDoc.nodesById });
+
+			// Depth 1 (column index 0): only show the label (avoid repeating it in the card body).
+			if (selectedColumnIndex === 0) {
+				displayLabelFull = "";
+			}
+
+			// Depth 2 (column index 1): show the depth-1 label as the title, and the depth-2 label as the body.
+			if (selectedColumnIndex === 1) {
+				const depth1Label = getAncestorPathLabel({
+					nodeId,
+					nodesById: plan.planDoc.nodesById,
+					includeColumnIndexes: [0],
+				});
+				if (depth1Label) {
+					displayLabelFirstLine = depth1Label;
+					parentLabel = "";
+				}
+				displayLabelFull = labelFirstLine;
+			}
 
 			items.push({
 				nodeId,
 				importance,
 				ease,
 				timeHours,
-				labelFirstLine,
-				labelFull,
+				labelFirstLine: displayLabelFirstLine,
+				labelFull: displayLabelFull,
 				parentLabel,
 				completionPct,
 			});
@@ -166,8 +228,8 @@ export const ExecutionGridView = () => {
 
 		return items;
 	}, [
-		childLimitPerParent,
 		completionByNodeId,
+		isHidingDone,
 		isHidingPlaceholders,
 		plan.planDoc.nodesById,
 		rollupsByNodeId,
@@ -176,44 +238,11 @@ export const ExecutionGridView = () => {
 
 	const columns = 5;
 
-	const buckets = useMemo(() => {
-		const result: RankedItem[][] = Array.from({ length: columns }, () => []);
-
-		for (const item of ranked) {
-			const importanceBucket = Math.max(1, Math.min(5, Math.trunc(item.importance)));
-			const columnIndex = Math.max(0, Math.min(columns - 1, 5 - importanceBucket));
-			result[columnIndex].push(item);
-		}
-
-		for (const col of result) {
-			col.sort((a, b) => {
-				if (a.ease !== b.ease) {
-					return b.ease - a.ease;
-				}
-
-				const aScore = a.importance + a.ease;
-				const bScore = b.importance + b.ease;
-
-				if (aScore !== bScore) {
-					return bScore - aScore;
-				}
-
-				if (a.timeHours !== b.timeHours) {
-					return a.timeHours - b.timeHours;
-				}
-				
-				return a.labelFirstLine.localeCompare(b.labelFirstLine);
-			});
-		}
-
-		return result;
-	}, [ranked]);
-
 	return (
 		<div>
-			<div className="mb-2 flex items-center justify-between gap-2">
+			<div className="sticky top-0 z-20 mb-2 flex items-center justify-between gap-2 bg-zinc-50 py-2">
 				<div className="text-xs text-zinc-600">
-					Grid: importance left→right (high→low), ease top→bottom (high→low)
+					Grid: ranked by score (importance + ease), filled left→right then top→bottom
 				</div>
 
 				<div className="flex items-center gap-2">
@@ -225,6 +254,16 @@ export const ExecutionGridView = () => {
 							className="h-3.5 w-3.5"
 						/>
 						Hide placeholders
+					</label>
+
+					<label className="flex select-none items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900">
+						<input
+							type="checkbox"
+							checked={isHidingDone}
+							onChange={(e) => setIsHidingDone(e.target.checked)}
+							className="h-3.5 w-3.5"
+						/>
+						Hide done
 					</label>
 
 					<select
@@ -240,30 +279,6 @@ export const ExecutionGridView = () => {
 							);
 						})}
 					</select>
-
-					<select
-						value={childLimitPerParent === null ? "" : String(childLimitPerParent)}
-						onChange={(e) => {
-							const raw = e.target.value;
-							if (raw === "") {
-								setChildLimitPerParent(null);
-								return;
-							}
-
-							const parsed = Number.parseInt(raw, 10);
-							const nextValue = Number.isFinite(parsed) ? Math.max(1, Math.trunc(parsed)) : 1;
-							setChildLimitPerParent(nextValue);
-						}}
-						className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
-					>
-						<option value="">Per parent: all children</option>
-						<option value="1">Per parent: first child only</option>
-						<option value="2">Per parent: first 2 children</option>
-						<option value="3">Per parent: first 3 children</option>
-						<option value="4">Per parent: first 4 children</option>
-						<option value="5">Per parent: first 5 children</option>
-						<option value="10">Per parent: first 10 children</option>
-					</select>
 				</div>
 			</div>
 
@@ -273,26 +288,20 @@ export const ExecutionGridView = () => {
 				</div>
 			) : (
 				<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(240px, 1fr))` }}>
-					{buckets.map((bucketItems, idx) => {
+					{ranked.map((item) => {
 						return (
-							<div key={idx} className="flex flex-col gap-2">
-								{bucketItems.map((item) => {
-									return (
-										<ExecutionGridCard
-											key={item.nodeId}
-											parentLabel={item.parentLabel}
-											labelFirstLine={item.labelFirstLine}
-											labelFull={item.labelFull}
-											importance={item.importance}
-											ease={item.ease}
-											timeHours={item.timeHours}
-											completionPct={item.completionPct}
-											getCompletionBadgeClassName={getCompletionBadgeClassName}
-											onPress={() => setSelectedNodeId(item.nodeId)}
-										/>
-									);
-								})}
-							</div>
+							<ExecutionGridCard
+								key={item.nodeId}
+								parentLabel={item.parentLabel}
+								labelFirstLine={item.labelFirstLine}
+								labelFull={item.labelFull}
+								importance={item.importance}
+								ease={item.ease}
+								timeHours={item.timeHours}
+								completionPct={item.completionPct}
+								getCompletionBadgeClassName={getCompletionBadgeClassName}
+								onPress={() => setSelectedNodeId(item.nodeId)}
+							/>
 						);
 					})}
 				</div>
