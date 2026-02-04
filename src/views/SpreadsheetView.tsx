@@ -145,73 +145,75 @@ export const SpreadsheetView = () => {
 				}}
 			>
 				<div className="flex h-full flex-col">
-					<div className="grid grid-cols-[16px_1fr_auto] items-start gap-x-1">
-						<div className="mt-1">
-							{showCollapse ? (
-								<button
-									type="button"
-									onClick={() => plan.dispatch({ type: "plan/nodeToggleCollapsed", nodeId: node.id })}
-									aria-label={node.isCollapsed ? "Expand" : "Collapse"}
-									className="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-transparent text-zinc-600 hover:bg-zinc-50"
-								>
-									<svg
-										width="10"
-										height="10"
-										viewBox="0 0 16 16"
-										fill="currentColor"
-										aria-hidden="true"
-										className={node.isCollapsed ? "" : "rotate-90"}
+					<div className="relative min-w-0">
+						<div className="pointer-events-none absolute right-0 top-0 z-10 opacity-0 transition-opacity group-hover:opacity-100">
+							<div className="pointer-events-auto">
+								<MoreMenu ariaLabel="Cell actions">
+									<AddChildItemUtility parentId={node.id} />
+									{isRoot ? (
+										<MoveRootItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+									) : (
+										<MoveChildItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+									)}
+									{isRoot ? (
+										<MoveRootItemUtility
+											nodeId={node.id}
+											direction="down"
+											isDisabled={placement.indexInParent === placement.siblingsCount - 1}
+										/>
+									) : (
+										<MoveChildItemUtility
+											nodeId={node.id}
+											direction="down"
+											isDisabled={placement.indexInParent === placement.siblingsCount - 1}
+										/>
+									)}
+									<DeleteNodeUtility nodeId={node.id} />
+								</MoreMenu>
+							</div>
+						</div>
+
+						<div className="flex min-w-0 items-start gap-1">
+							<div className="mt-1 shrink-0">
+								{showCollapse ? (
+									<button
+										type="button"
+										onClick={() => plan.dispatch({ type: "plan/nodeToggleCollapsed", nodeId: node.id })}
+										aria-label={node.isCollapsed ? "Expand" : "Collapse"}
+										className="flex h-4 w-4 items-center justify-center rounded border border-transparent text-zinc-600 hover:bg-zinc-50"
 									>
-										<path d="M6 4l6 4-6 4V4z" />
-									</svg>
-								</button>
-							) : (
-								<div className="h-4 w-4" />
-							)}
-						</div>
-
-						<div />
-
-						<div className="mt-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-							<MoreMenu ariaLabel="Cell actions">
-								<AddChildItemUtility parentId={node.id} />
-								{isRoot ? (
-									<MoveRootItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+										<svg
+											width="10"
+											height="10"
+											viewBox="0 0 16 16"
+											fill="currentColor"
+											aria-hidden="true"
+											className={node.isCollapsed ? "" : "rotate-90"}
+										>
+											<path d="M6 4l6 4-6 4V4z" />
+										</svg>
+									</button>
 								) : (
-									<MoveChildItemUtility nodeId={node.id} direction="up" isDisabled={placement.indexInParent === 0} />
+									<div className="h-4 w-4" />
 								)}
-								{isRoot ? (
-									<MoveRootItemUtility
-										nodeId={node.id}
-										direction="down"
-										isDisabled={placement.indexInParent === placement.siblingsCount - 1}
-									/>
-								) : (
-									<MoveChildItemUtility
-										nodeId={node.id}
-										direction="down"
-										isDisabled={placement.indexInParent === placement.siblingsCount - 1}
-									/>
-								)}
-								<DeleteNodeUtility nodeId={node.id} />
-							</MoreMenu>
-						</div>
+							</div>
 
-						<div className="col-span-3 min-w-0">
-							<TextInput
-								value={node.label}
-								onChange={(nextValue) => {
-									plan.dispatch({
-										type: "plan/nodeSetLabel",
-										nodeId: node.id,
-										label: nextValue,
-									});
-								}}
-								placeholder="Label"
-								isMultiline={true}
-								rows={2}
-								variant="ghost"
-							/>
+							<div className="min-w-0 flex-1">
+								<TextInput
+									value={node.label}
+									onChange={(nextValue) => {
+										plan.dispatch({
+											type: "plan/nodeSetLabel",
+											nodeId: node.id,
+											label: nextValue,
+										});
+									}}
+									placeholder="Label"
+									isMultiline={true}
+									rows={2}
+									variant="ghost"
+								/>
+							</div>
 						</div>
 					</div>
 
