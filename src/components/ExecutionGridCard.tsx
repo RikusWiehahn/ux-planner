@@ -16,6 +16,40 @@ export const ExecutionGridCard = (props: {
 
 	const isClickable = typeof props.onPress === "function";
 
+	const renderBodyText = () => {
+		if (!props.labelFull) {
+			return null;
+		}
+
+		return <div className="mt-1 whitespace-pre-wrap text-[11px] text-zinc-600">{props.labelFull}</div>;
+	};
+
+	const renderMetrics = () => {
+		return (
+			<div className="mt-auto border-t border-zinc-200 pt-1">
+				<div className="flex flex-wrap items-center gap-1 text-[10px] font-semibold text-zinc-700">
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="font-mono text-zinc-500">I</span>
+						<span className="tabular-nums">{props.importance}</span>
+					</div>
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="font-mono text-zinc-500">E</span>
+						<span className="tabular-nums">{props.ease}</span>
+					</div>
+					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
+						<span className="tabular-nums">{props.timeHours ? props.timeHours : "—"}</span>
+						<span className="font-mono text-zinc-500">hrs</span>
+					</div>
+					<span
+						className={`${props.getCompletionBadgeClassName(props.completionPct)} border border-zinc-200 px-1.5 py-0 h-auto min-w-0 text-[10px] font-semibold`}
+					>
+						{props.completionPct}%
+					</span>
+				</div>
+			</div>
+		);
+	};
+
 	return (
 		<div
 			className={
@@ -44,31 +78,8 @@ export const ExecutionGridCard = (props: {
 				<div className="text-xs font-medium text-zinc-950">{title}</div>
 			</div>
 
-			{props.labelFull ? (
-				<div className="mt-1 whitespace-pre-wrap text-[11px] text-zinc-600">{props.labelFull}</div>
-			) : null}
-
-			<div className="mt-auto border-t border-zinc-200 pt-1">
-				<div className="flex flex-wrap items-center gap-1 text-[10px] font-semibold text-zinc-700">
-					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
-						<span className="font-mono text-zinc-500">I</span>
-						<span className="tabular-nums">{props.importance}</span>
-					</div>
-					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
-						<span className="font-mono text-zinc-500">E</span>
-						<span className="tabular-nums">{props.ease}</span>
-					</div>
-					<div className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0">
-						<span className="tabular-nums">{props.timeHours ? props.timeHours : "—"}</span>
-						<span className="font-mono text-zinc-500">hrs</span>
-					</div>
-					<span
-						className={`${props.getCompletionBadgeClassName(props.completionPct)} border border-zinc-200 px-1.5 py-0 h-auto min-w-0 text-[10px] font-semibold`}
-					>
-						{props.completionPct}%
-					</span>
-				</div>
-			</div>
+			{renderBodyText()}
+			{renderMetrics()}
 		</div>
 	);
 };

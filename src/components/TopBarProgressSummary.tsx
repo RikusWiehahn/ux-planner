@@ -112,6 +112,70 @@ export const TopBarProgressSummary = () => {
 		return isWhole ? String(Math.round(rounded)) : rounded.toFixed(1);
 	};
 
+	const renderByDepthSection = () => {
+		if (summary.columnSummaries.length === 0) {
+			return null;
+		}
+
+		const shown = summary.columnSummaries.filter((column) => column.columnIndex >= 3);
+		if (shown.length === 0) {
+			return null;
+		}
+
+		return (
+			<div className="mt-4">
+				<div className="text-xs font-semibold text-zinc-950">By depth</div>
+				<div className="mt-2 flex flex-col gap-1 rounded-md border border-zinc-200 bg-white p-2">
+					{shown.map((column) => {
+						return (
+							<div
+								key={column.columnIndex}
+								className="flex items-center justify-between gap-3 rounded-md px-1.5 py-1 hover:bg-zinc-50"
+							>
+								<div className="text-zinc-500">{column.label}</div>
+								<div className="flex items-center gap-2">
+									<div className="text-[11px] text-zinc-500">
+										{formatHours(column.doneHours)}/{formatHours(column.totalHours)} hrs
+									</div>
+									<div className={getCompletionBadgeClassName(column.completionPct)}>{column.completionPct}%</div>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			</div>
+		);
+	};
+
+	const renderModalBody = () => {
+		return (
+			<div className="text-xs text-zinc-700">
+				<div className="flex items-center justify-between gap-3">
+					<div className="text-zinc-500">Total hours estimated</div>
+					<div className="font-semibold text-zinc-950">{formatHours(summary.totalHoursEstimated)} hrs</div>
+				</div>
+
+				<div className="mt-2 flex items-center justify-between gap-3">
+					<div className="text-zinc-500">Total hours complete</div>
+					<div className="font-semibold text-zinc-950">{formatHours(summary.totalHoursComplete)} hrs</div>
+				</div>
+
+				<div className="mt-2 flex items-center justify-between gap-3">
+					<div className="text-zinc-500">Total hours to do</div>
+					<div className="font-semibold text-zinc-950">{formatHours(summary.totalHoursToDo)} hrs</div>
+				</div>
+
+				{renderByDepthSection()}
+
+				<div className="mt-4">
+					<SecondaryButton className="w-full justify-center" onPress={() => setIsOpen(false)}>
+						Close
+					</SecondaryButton>
+				</div>
+			</div>
+		);
+	};
+
 	return (
 		<div className="flex w-40 items-center">
 			<button
@@ -131,65 +195,7 @@ export const TopBarProgressSummary = () => {
 				title="Overall progress"
 				onClose={() => setIsOpen(false)}
 			>
-				<div className="text-xs text-zinc-700">
-					<div className="flex items-center justify-between gap-3">
-						<div className="text-zinc-500">Total hours estimated</div>
-						<div className="font-semibold text-zinc-950">
-							{formatHours(summary.totalHoursEstimated)} hrs
-						</div>
-					</div>
-
-					<div className="mt-2 flex items-center justify-between gap-3">
-						<div className="text-zinc-500">Total hours complete</div>
-						<div className="font-semibold text-zinc-950">
-							{formatHours(summary.totalHoursComplete)} hrs
-						</div>
-					</div>
-
-					<div className="mt-2 flex items-center justify-between gap-3">
-						<div className="text-zinc-500">Total hours to do</div>
-						<div className="font-semibold text-zinc-950">
-							{formatHours(summary.totalHoursToDo)} hrs
-						</div>
-					</div>
-
-					{summary.columnSummaries.length > 0 ? (
-						<div className="mt-4">
-							<div className="text-xs font-semibold text-zinc-950">By depth</div>
-							<div className="mt-2 flex flex-col gap-1 rounded-md border border-zinc-200 bg-white p-2">
-								{summary.columnSummaries
-									.filter((column) => column.columnIndex >= 3)
-									.map((column) => {
-									return (
-										<div
-											key={column.columnIndex}
-											className="flex items-center justify-between gap-3 rounded-md px-1.5 py-1 hover:bg-zinc-50"
-										>
-											<div className="text-zinc-500">{column.label}</div>
-											<div className="flex items-center gap-2">
-												<div className="text-[11px] text-zinc-500">
-													{formatHours(column.doneHours)}/{formatHours(column.totalHours)} hrs
-												</div>
-												<div className={getCompletionBadgeClassName(column.completionPct)}>
-													{column.completionPct}%
-												</div>
-											</div>
-										</div>
-									);
-								})}
-							</div>
-						</div>
-					) : null}
-
-					<div className="mt-4">
-						<SecondaryButton
-							className="w-full justify-center"
-							onPress={() => setIsOpen(false)}
-						>
-							Close
-						</SecondaryButton>
-					</div>
-				</div>
+				{renderModalBody()}
 			</ModalWrapper>
 		</div>
 	);

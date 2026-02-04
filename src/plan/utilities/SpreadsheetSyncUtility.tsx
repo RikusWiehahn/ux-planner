@@ -328,8 +328,8 @@ export const SpreadsheetSyncUtility = () => {
 		}
 	};
 
-	return (
-		<div>
+	const renderMenuItem = () => {
+		return (
 			<button
 				type="button"
 				role="menuitem"
@@ -338,7 +338,128 @@ export const SpreadsheetSyncUtility = () => {
 			>
 				Spreadsheet sync
 			</button>
+		);
+	};
 
+	const renderDeploymentIdSection = () => {
+		return (
+			<div>
+				<InputLabel>Deployment ID</InputLabel>
+				<div className="mt-1">
+					<TextInput
+						value={deploymentId}
+						onChange={(v) => setDeploymentId(v)}
+						placeholder="AKfycbx..."
+						className="font-mono"
+					/>
+				</div>
+				<div className="mt-1 text-xs text-zinc-600">
+					This is the part between <span className="font-mono">/s/</span> and <span className="font-mono">/exec</span>.
+				</div>
+			</div>
+		);
+	};
+
+	const renderPullFromSheetSection = () => {
+		return (
+			<div>
+				<InputLabel>When pulling changes from the spreadsheet</InputLabel>
+				<div className="mt-2 flex flex-wrap items-center gap-2">
+					<PrimaryButton onPress={fetchFromSpreadsheet} isDisabled={isBusy || !url}>
+						Fetch
+					</PrimaryButton>
+
+					<SecondaryButton onPress={applyToApp} isDisabled={isBusy || payloadText.trim().length === 0}>
+						Apply to app
+					</SecondaryButton>
+				</div>
+			</div>
+		);
+	};
+
+	const renderSaveToSheetSection = () => {
+		return (
+			<div>
+				<InputLabel>Grab the current plan and save it to the sheet</InputLabel>
+				<div className="mt-1 text-xs text-zinc-600">First time: click “Use current plan”, then “Save”.</div>
+				<div className="mt-2 flex flex-wrap items-center gap-2">
+					<SecondaryButton
+						onPress={() => {
+							setPayloadText(defaultPayloadText);
+							setErrorText("");
+							setStatusText("Loaded current plan into editor.");
+						}}
+						isDisabled={isBusy}
+					>
+						Use current plan
+					</SecondaryButton>
+
+					<PrimaryButton onPress={saveToSpreadsheet} isDisabled={isBusy || !url || payloadText.trim().length === 0}>
+						Save
+					</PrimaryButton>
+				</div>
+			</div>
+		);
+	};
+
+	const renderStatusMessages = () => {
+		return (
+			<>
+				{errorText ? <div className="text-xs text-red-700">{errorText}</div> : null}
+				{statusText ? <div className="text-xs text-emerald-700">{statusText}</div> : null}
+			</>
+		);
+	};
+
+	const renderPayloadEditor = () => {
+		return (
+			<div>
+				<InputLabel>Payload (JSON)</InputLabel>
+				<div className="mt-1">
+					<TextInput
+						value={payloadText}
+						onChange={(v) => setPayloadText(v)}
+						isMultiline={true}
+						rows={12}
+						isAutoHeight={false}
+						className="h-72 font-mono"
+					/>
+				</div>
+			</div>
+		);
+	};
+
+	const renderSetupInstructions = () => {
+		return (
+			<details className="rounded-md border border-zinc-200 bg-white p-3">
+				<summary className="cursor-pointer text-sm font-medium text-zinc-900">Google Sheets setup instructions</summary>
+				<div className="mt-2">
+					<TextInput
+						value={getAppsScriptSetupText()}
+						onChange={() => {}}
+						isReadOnly={true}
+						isMultiline={true}
+						rows={14}
+						isAutoHeight={false}
+						className="h-72 font-mono"
+					/>
+				</div>
+			</details>
+		);
+	};
+
+	const renderFooter = () => {
+		return (
+			<div className="flex items-center justify-end">
+				<SecondaryButton onPress={() => setIsOpen(false)} isDisabled={isBusy}>
+					Close
+				</SecondaryButton>
+			</div>
+		);
+	};
+
+	const renderModal = () => {
+		return (
 			<ModalWrapper
 				isOpen={isOpen}
 				title="Spreadsheet sync"
@@ -349,107 +470,26 @@ export const SpreadsheetSyncUtility = () => {
 				}}
 			>
 				<div className="space-y-3">
-					<div>
-						<InputLabel>Deployment ID</InputLabel>
-						<div className="mt-1">
-							<TextInput
-								value={deploymentId}
-								onChange={(v) => setDeploymentId(v)}
-								placeholder="AKfycbx..."
-								className="font-mono"
-							/>
-						</div>
-						<div className="mt-1 text-xs text-zinc-600">
-							This is the part between <span className="font-mono">/s/</span> and{" "}
-							<span className="font-mono">/exec</span>.
-						</div>
-					</div>
+					{renderDeploymentIdSection()}
 
 					<div className="space-y-3">
-						<div>
-							<InputLabel>When pulling changes from the spreadsheet</InputLabel>
-							<div className="mt-2 flex flex-wrap items-center gap-2">
-								<PrimaryButton onPress={fetchFromSpreadsheet} isDisabled={isBusy || !url}>
-									Fetch
-								</PrimaryButton>
-
-								<SecondaryButton
-									onPress={applyToApp}
-									isDisabled={isBusy || payloadText.trim().length === 0}
-								>
-									Apply to app
-								</SecondaryButton>
-							</div>
-						</div>
-
-						<div>
-							<InputLabel>Grab the current plan and save it to the sheet</InputLabel>
-							<div className="mt-1 text-xs text-zinc-600">
-								First time: click “Use current plan”, then “Save”.
-							</div>
-							<div className="mt-2 flex flex-wrap items-center gap-2">
-								<SecondaryButton
-									onPress={() => {
-										setPayloadText(defaultPayloadText);
-										setErrorText("");
-										setStatusText("Loaded current plan into editor.");
-									}}
-									isDisabled={isBusy}
-								>
-									Use current plan
-								</SecondaryButton>
-
-								<PrimaryButton
-									onPress={saveToSpreadsheet}
-									isDisabled={isBusy || !url || payloadText.trim().length === 0}
-								>
-									Save
-								</PrimaryButton>
-							</div>
-						</div>
+						{renderPullFromSheetSection()}
+						{renderSaveToSheetSection()}
 					</div>
 
-					{errorText ? <div className="text-xs text-red-700">{errorText}</div> : null}
-					{statusText ? <div className="text-xs text-emerald-700">{statusText}</div> : null}
-
-					<div>
-						<InputLabel>Payload (JSON)</InputLabel>
-						<div className="mt-1">
-							<TextInput
-								value={payloadText}
-								onChange={(v) => setPayloadText(v)}
-								isMultiline={true}
-								rows={12}
-								isAutoHeight={false}
-								className="h-72 font-mono"
-							/>
-						</div>
-					</div>
-
-					<details className="rounded-md border border-zinc-200 bg-white p-3">
-						<summary className="cursor-pointer text-sm font-medium text-zinc-900">
-							Google Sheets setup instructions
-						</summary>
-						<div className="mt-2">
-							<TextInput
-								value={getAppsScriptSetupText()}
-								onChange={() => {}}
-								isReadOnly={true}
-								isMultiline={true}
-								rows={14}
-								isAutoHeight={false}
-								className="h-72 font-mono"
-							/>
-						</div>
-					</details>
-
-					<div className="flex items-center justify-end">
-						<SecondaryButton onPress={() => setIsOpen(false)} isDisabled={isBusy}>
-							Close
-						</SecondaryButton>
-					</div>
+					{renderStatusMessages()}
+					{renderPayloadEditor()}
+					{renderSetupInstructions()}
+					{renderFooter()}
 				</div>
 			</ModalWrapper>
+		);
+	};
+
+	return (
+		<div>
+			{renderMenuItem()}
+			{renderModal()}
 		</div>
 	);
 };

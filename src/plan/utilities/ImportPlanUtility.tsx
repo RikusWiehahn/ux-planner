@@ -43,8 +43,8 @@ export const ImportPlanUtility = () => {
 		}
 	};
 
-	return (
-		<div>
+	const renderMenuItem = () => {
+		return (
 			<button
 				type="button"
 				role="menuitem"
@@ -56,7 +56,83 @@ export const ImportPlanUtility = () => {
 			>
 				Import JSON
 			</button>
+		);
+	};
 
+	const renderDescription = () => {
+		return (
+			<div className="text-xs text-zinc-600">
+				Paste a previously exported `ux-planner.json` here. This will replace your current document.
+			</div>
+		);
+	};
+
+	const renderJsonInput = () => {
+		return (
+			<div className="mt-2">
+				<TextInput
+					value={jsonText}
+					onChange={(v) => setJsonText(v)}
+					placeholder="{ ... }"
+					isMultiline={true}
+					rows={10}
+					isAutoHeight={false}
+					className="h-56 font-mono"
+				/>
+			</div>
+		);
+	};
+
+	const renderError = () => {
+		return error ? <div className="mt-2 text-xs text-red-700">{error}</div> : null;
+	};
+
+	const renderFooter = () => {
+		return (
+			<div className="mt-3 flex items-center justify-between gap-2">
+				<div className="flex items-center gap-2">
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept="application/json,.json"
+						onChange={onFileChange}
+						className="hidden"
+					/>
+
+					<SecondaryButton
+						onPress={() => {
+							fileInputRef.current?.click();
+						}}
+					>
+						Upload JSON file
+					</SecondaryButton>
+				</div>
+
+				<div className="flex items-center gap-2">
+					<SecondaryButton
+						onPress={() => {
+							setIsOpen(false);
+							setError("");
+						}}
+					>
+						Cancel
+					</SecondaryButton>
+
+					<PrimaryButton
+						onPress={() => {
+							importFromText(jsonText);
+						}}
+						isDisabled={jsonText.trim().length === 0}
+					>
+						Import
+					</PrimaryButton>
+				</div>
+			</div>
+		);
+	};
+
+	const renderModal = () => {
+		return (
 			<ModalWrapper
 				isOpen={isOpen}
 				title="Import JSON"
@@ -65,64 +141,18 @@ export const ImportPlanUtility = () => {
 					setError("");
 				}}
 			>
-				<div className="text-xs text-zinc-600">
-					Paste a previously exported `ux-planner.json` here. This will replace your current document.
-				</div>
-
-				<div className="mt-2">
-					<TextInput
-						value={jsonText}
-						onChange={(v) => setJsonText(v)}
-						placeholder="{ ... }"
-						isMultiline={true}
-						rows={10}
-						isAutoHeight={false}
-						className="h-56 font-mono"
-					/>
-				</div>
-
-				{error ? <div className="mt-2 text-xs text-red-700">{error}</div> : null}
-
-				<div className="mt-3 flex items-center justify-between gap-2">
-					<div className="flex items-center gap-2">
-						<input
-							ref={fileInputRef}
-							type="file"
-							accept="application/json,.json"
-							onChange={onFileChange}
-							className="hidden"
-						/>
-
-						<SecondaryButton
-							onPress={() => {
-								fileInputRef.current?.click();
-							}}
-						>
-							Upload JSON file
-						</SecondaryButton>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<SecondaryButton
-							onPress={() => {
-								setIsOpen(false);
-								setError("");
-							}}
-						>
-							Cancel
-						</SecondaryButton>
-
-						<PrimaryButton
-							onPress={() => {
-								importFromText(jsonText);
-							}}
-							isDisabled={jsonText.trim().length === 0}
-						>
-							Import
-						</PrimaryButton>
-					</div>
-				</div>
+				{renderDescription()}
+				{renderJsonInput()}
+				{renderError()}
+				{renderFooter()}
 			</ModalWrapper>
+		);
+	};
+
+	return (
+		<div>
+			{renderMenuItem()}
+			{renderModal()}
 		</div>
 	);
 };

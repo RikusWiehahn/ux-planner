@@ -238,8 +238,8 @@ export const ExecutionGridView = () => {
 
 	const columns = 5;
 
-	return (
-		<div>
+	const renderStickyOptionsBar = () => {
+		return (
 			<div className="sticky top-0 z-20 mb-2 flex items-center justify-between gap-2 bg-zinc-50 py-2">
 				<div className="text-xs text-zinc-600">
 					Grid: ranked by score (importance + ease), filled left→right then top→bottom
@@ -281,31 +281,45 @@ export const ExecutionGridView = () => {
 					</select>
 				</div>
 			</div>
+		);
+	};
 
-			{ranked.length === 0 ? (
-				<div className="rounded-md border border-dashed border-zinc-200 bg-white p-3 text-xs text-zinc-600">
-					No scored items yet. Set importance and ease on leaf nodes (right-most cells) to rank them.
-				</div>
-			) : (
-				<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(240px, 1fr))` }}>
-					{ranked.map((item) => {
-						return (
-							<ExecutionGridCard
-								key={item.nodeId}
-								parentLabel={item.parentLabel}
-								labelFirstLine={item.labelFirstLine}
-								labelFull={item.labelFull}
-								importance={item.importance}
-								ease={item.ease}
-								timeHours={item.timeHours}
-								completionPct={item.completionPct}
-								getCompletionBadgeClassName={getCompletionBadgeClassName}
-								onPress={() => setSelectedNodeId(item.nodeId)}
-							/>
-						);
-					})}
-				</div>
-			)}
+	const renderEmptyState = () => {
+		return (
+			<div className="rounded-md border border-dashed border-zinc-200 bg-white p-3 text-xs text-zinc-600">
+				No scored items yet. Set importance and ease on leaf nodes (right-most cells) to rank them.
+			</div>
+		);
+	};
+
+	const renderGrid = () => {
+		return (
+			<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(240px, 1fr))` }}>
+				{ranked.map((item) => {
+					return (
+						<ExecutionGridCard
+							key={item.nodeId}
+							parentLabel={item.parentLabel}
+							labelFirstLine={item.labelFirstLine}
+							labelFull={item.labelFull}
+							importance={item.importance}
+							ease={item.ease}
+							timeHours={item.timeHours}
+							completionPct={item.completionPct}
+							getCompletionBadgeClassName={getCompletionBadgeClassName}
+							onPress={() => setSelectedNodeId(item.nodeId)}
+						/>
+					);
+				})}
+			</div>
+		);
+	};
+
+	return (
+		<div>
+			{renderStickyOptionsBar()}
+
+			{ranked.length === 0 ? renderEmptyState() : renderGrid()}
 
 			<ExecutionGridCardDetailsModal
 				isOpen={selectedNodeId !== null}

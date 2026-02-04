@@ -29,8 +29,8 @@ export const ExportPlanUtility = () => {
 		URL.revokeObjectURL(url);
 	};
 
-	return (
-		<div>
+	const renderMenuItem = () => {
+		return (
 			<button
 				type="button"
 				role="menuitem"
@@ -39,11 +39,13 @@ export const ExportPlanUtility = () => {
 			>
 				Export JSON
 			</button>
+		);
+	};
 
-			<ModalWrapper isOpen={isOpen} title="Export JSON" onClose={() => setIsOpen(false)}>
-				<div className="text-xs text-zinc-600">
-					Copy this JSON to save/share the document.
-				</div>
+	const renderModalBody = () => {
+		return (
+			<>
+				<div className="text-xs text-zinc-600">Copy this JSON to save/share the document.</div>
 
 				<div className="mt-2">
 					<TextInput
@@ -61,7 +63,22 @@ export const ExportPlanUtility = () => {
 					<PrimaryButton onPress={downloadFile}>Download file</PrimaryButton>
 					<SecondaryButton onPress={() => setIsOpen(false)}>Close</SecondaryButton>
 				</div>
+			</>
+		);
+	};
+
+	const renderModal = () => {
+		return (
+			<ModalWrapper isOpen={isOpen} title="Export JSON" onClose={() => setIsOpen(false)}>
+				{renderModalBody()}
 			</ModalWrapper>
+		);
+	};
+
+	return (
+		<div>
+			{renderMenuItem()}
+			{renderModal()}
 		</div>
 	);
 };
