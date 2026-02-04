@@ -173,9 +173,9 @@ export const SpreadsheetView = () => {
 							</div>
 						</div>
 
-						<div className="flex min-w-0 items-start gap-1">
-							<div className="mt-1 shrink-0">
-								{showCollapse ? (
+						<div className="flex min-w-0 items-start gap-0.5">
+							{showCollapse ? (
+								<div className="mt-1 shrink-0">
 									<button
 										type="button"
 										onClick={() => plan.dispatch({ type: "plan/nodeToggleCollapsed", nodeId: node.id })}
@@ -193,10 +193,8 @@ export const SpreadsheetView = () => {
 											<path d="M6 4l6 4-6 4V4z" />
 										</svg>
 									</button>
-								) : (
-									<div className="h-4 w-4" />
-								)}
-							</div>
+								</div>
+							) : null}
 
 							<div className="min-w-0 flex-1">
 								<TextInput
