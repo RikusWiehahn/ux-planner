@@ -112,6 +112,22 @@ export const TopBarProgressSummary = () => {
 		return isWhole ? String(Math.round(rounded)) : rounded.toFixed(1);
 	};
 
+	const getCompletionEmoji = (completionPct: number) => {
+		if (completionPct >= 90) {
+			return "🤩";
+		}
+		if (completionPct >= 75) {
+			return "😎";
+		}
+		if (completionPct >= 50) {
+			return "😐";
+		}
+		if (completionPct >= 25) {
+			return "😭";
+		}
+		return "🤬";
+	};
+
 	const renderByDepthSection = () => {
 		if (summary.columnSummaries.length === 0) {
 			return null;
@@ -127,17 +143,30 @@ export const TopBarProgressSummary = () => {
 				<div className="text-xs font-semibold text-zinc-950">By depth</div>
 				<div className="mt-2 flex flex-col gap-1 rounded-md border border-zinc-200 bg-white p-2">
 					{shown.map((column) => {
+						const toDoHours = Math.max(0, column.totalHours - column.doneHours);
+						const mood = getCompletionEmoji(column.completionPct);
+
 						return (
 							<div
 								key={column.columnIndex}
-								className="flex items-center justify-between gap-3 rounded-md px-1.5 py-1 hover:bg-zinc-50"
+								className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-2 rounded-md px-1.5 py-1 hover:bg-zinc-50"
 							>
-								<div className="text-zinc-500">{column.label}</div>
-								<div className="flex items-center gap-2">
-									<div className="text-[11px] text-zinc-500">
-										{formatHours(column.doneHours)}/{formatHours(column.totalHours)} hrs
+								<div className="min-w-0 truncate font-semibold text-zinc-500">{column.label}</div>
+								<div className="grid grid-cols-[repeat(2,minmax(0,1fr))_auto_auto] items-center gap-1.5">
+									<div className="whitespace-nowrap text-right text-[10px] font-semibold tabular-nums text-zinc-500">
+										{formatHours(column.totalHours)} total
 									</div>
-									<div className={getCompletionBadgeClassName(column.completionPct)}>{column.completionPct}%</div>
+									<div className="whitespace-nowrap text-right text-[10px] font-semibold tabular-nums text-zinc-500">
+										{formatHours(toDoHours)} to do
+									</div>
+									<div className="flex justify-end">
+										<div className={getCompletionBadgeClassName(column.completionPct)}>{column.completionPct}%</div>
+									</div>
+									<div className="flex justify-end">
+										<div className="text-2xl leading-none" aria-label="Completion mood">
+											{mood}
+										</div>
+									</div>
 								</div>
 							</div>
 						);
